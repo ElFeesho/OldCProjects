@@ -1,0 +1,6 @@
+sprite = images/wtfbomb.png
+frame_w = 64
+frame_h = 32
+
+frames = 2
+delay = 50

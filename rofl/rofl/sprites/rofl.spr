@@ -1,0 +1,6 @@
+sprite = images/rofl.png
+frame_w = 256
+frame_h = 128
+
+frames = 2
+delay = 100

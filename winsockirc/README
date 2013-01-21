@@ -1,0 +1,14 @@
+Hey chief- I compiled this with mingw on linux- so... it should work, but I can't
+be 100%. I STRONGLY advise you use Dev-C++, it's just so easier to get to grips with
+and also it's actually standard ansi C/C++ it uses, instead of microsofts' twisted
+idea of C/C++ (stdafx.h is not standard at all!).
+
+The bot is pretty simple, it responds to "COOKIES" and "QUIT" but it's very basic,
+if you wanna mess about with getting the nickname of who said what, I recommend
+reading the std::string api references some where off the net.
+
+If you need any help at all hop into ##nonlogic on freenode
+
+It's 2:15am and I want to sleep! hehe
+
+Gnight; Feesh

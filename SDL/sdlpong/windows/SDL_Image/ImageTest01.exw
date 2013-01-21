@@ -1,0 +1,213 @@
+-- ImageTest01.EXW
+-- Test the SDL_Image functions through the Wrapper 
+
+include file.e
+include machine.e
+include misc.e
+
+atom format,pixels
+atom dummy
+atom keystate
+atom surface,back
+atom rock,ball,ring,cube,arrow
+atom srect,drect
+atom mx,my
+integer gmouse
+
+dummy=chdir("C:\\Euphoria\\Myprogs\\SDL_Image")
+
+include Sdl_Wrap.ew
+include Sdl_image.ew
+
+
+-------------------------------------------------------------------
+
+procedure calc_rect(atom rect, integer sx, integer sy, integer tx, integer ty)
+
+    poke(rect,and_bits(sx,255))      
+    poke(rect+1,floor(sx/256))      
+    poke(rect+2,and_bits(sy,255))      
+    poke(rect+3,floor(sy/256))      
+    poke(rect+4,and_bits(tx,255))      
+    poke(rect+5,floor(tx/256))      
+    poke(rect+6,and_bits(ty,255))      
+    poke(rect+7,floor(ty/256))      
+
+end procedure
+
+-------------------------------------------------------------------
+
+procedure init()
+    
+    dummy = SDL_Init(SDL_INIT_VIDEO)
+    if dummy = -1 then
+        puts(1, "SDL_Init had a hissy fit!\n")
+    end if
+
+    surface = SDL_SetVideoMode(640,480,16,SDL_FULLSCREEN)
+
+    format=peek4u(surface+4)
+    pixels=peek4u(surface+20)
+
+    srect=allocate(8)
+
+    drect=allocate(8)
+
+    mx=allocate(4)
+    my=allocate(4)
+
+    back = SDL_ConvertSurface(surface,format,SDL_SWSURFACE)       				
+
+    rock=IMG_LoadJPG("Pics\\rock.jpg")
+	ball=IMG_LoadGIF("Pics\\ball.gif")
+	ring=IMG_LoadBMP("Pics\\ring.bmp")
+	cube=IMG_LoadPCX("Pics\\cube.pcx")
+	arrow=IMG_LoadPNG("Pics\\arrow.png")
+
+	dummy=SDL_SetColorKey(rock,SDL_SRCCOLORKEY,SDL_MapRGB(format,0,0,0))
+    if dummy = -1 then
+       puts(1, "SDL_SetColorKey had a hissy fit!\n")
+    end if
+
+	dummy=SDL_SetColorKey(ball,SDL_SRCCOLORKEY,SDL_MapRGB(format,0,0,0))
+    if dummy = -1 then
+       puts(1, "SDL_SetColorKey had a hissy fit!\n")
+    end if
+	dummy=SDL_SetColorKey(ring,SDL_SRCCOLORKEY,SDL_MapRGB(format,0,0,0))
+    if dummy = -1 then
+       puts(1, "SDL_SetColorKey had a hissy fit!\n")
+    end if
+	dummy=SDL_SetColorKey(cube,SDL_SRCCOLORKEY,SDL_MapRGB(format,0,0,0))
+    if dummy = -1 then
+       puts(1, "SDL_SetColorKey had a hissy fit!\n")
+    end if
+	dummy=SDL_SetColorKey(arrow,SDL_SRCCOLORKEY,SDL_MapRGB(format,0,0,0))
+    if dummy = -1 then
+       puts(1, "SDL_SetColorKey had a hissy fit!\n")
+    end if
+
+end procedure
+
+--------------------------------------------------------------------
+
+procedure cleanup()
+   
+-- We're done with them.. Free the surfaces
+    SDL_FreeSurface(surface)
+    SDL_FreeSurface(back)
+    SDL_FreeSurface(rock)
+    SDL_FreeSurface(ball)
+    SDL_FreeSurface(ring)
+    SDL_FreeSurface(cube)
+    SDL_FreeSurface(arrow)
+
+    free(srect)
+    free(drect)
+    free(mx)
+    free(my)
+
+-- quit SDL
+    SDL_Quit()   
+        
+end procedure
+
+--------------------------------------------------------------------
+
+procedure main()
+
+	atom done
+	integer mx2,my2
+	integer a
+	integer tx,ty
+	integer ticks1,ticks2,ticks
+
+	a=0
+	done=0    
+	while done=0 do
+
+		ticks1=SDL_GetTicks()
+		a+=6
+		if a>360 then
+			a-=360
+		end if
+		dummy=SDL_FillRect(back,NULL,0)
+	    	SDL_PumpEvents()
+    		keystate=SDL_GetKeyState(NULL)
+    		if peek(keystate+SDLK_ESCAPE)>0 then
+				done=1        
+		end if
+		gmouse=SDL_GetMouseState(mx,my)
+		if gmouse = -1 then
+			puts(1, "SDL_GetMouseState had a hissy fit!\n")
+		end if
+		mx2=peek(mx)+256*peek(mx+1)
+		my2=peek(my)+256*peek(my+1)
+		if gmouse=1 then
+				done=1        
+		end if
+
+		tx=floor(cos(a/180*PI)*30)
+		ty=floor(sin(a/180*PI)*70)
+		calc_rect(srect,0,0,24,24)
+		calc_rect(drect,mx2+tx,my2+ty,24,24)
+		dummy=SDL_BlitSurface(ball,srect,back,drect)
+		if dummy = -1 then
+			puts(1, "SDL_GetBlitSurface had a hissy fit!\n")
+		end if
+
+		tx=floor(cos((a+180)/180*PI)*70)
+		ty=floor(sin((a+180)/180*PI)*30)
+		calc_rect(srect,0,0,32,32)
+		calc_rect(drect,mx2+tx,my2+ty,32,32)
+		dummy=SDL_BlitSurface(rock,srect,back,drect)
+		if dummy = -1 then
+			puts(1, "SDL_GetBlitSurface had a hissy fit!\n")
+		end if
+
+		tx=floor(cos((a+180)/180*PI)*50)
+		ty=floor(sin((a+180)/180*PI)*50)
+		calc_rect(srect,0,0,24,24)
+		calc_rect(drect,mx2+tx,my2+ty,24,24)
+		dummy=SDL_BlitSurface(ring,srect,back,drect)
+		if dummy = -1 then
+			puts(1, "SDL_GetBlitSurface had a hissy fit!\n")
+		end if
+
+		tx=floor(cos((a+45)/180*PI)*60)
+		ty=floor(sin((a+45)/180*PI)*40)
+		calc_rect(srect,0,0,24,24)
+		calc_rect(drect,mx2+tx,my2+ty,24,24)
+		dummy=SDL_BlitSurface(cube,srect,back,drect)
+		if dummy = -1 then
+			puts(1, "SDL_GetBlitSurface had a hissy fit!\n")
+		end if
+
+		tx=floor(cos((a+225)/180*PI)*40)
+		ty=floor(sin((a+225)/180*PI)*60)
+		calc_rect(srect,0,0,24,24)
+		calc_rect(drect,mx2+tx,my2+ty,24,24)
+		dummy=SDL_BlitSurface(arrow,srect,back,drect)
+		if dummy = -1 then
+			puts(1, "SDL_GetBlitSurface had a hissy fit!\n")
+		end if
+
+		dummy=SDL_BlitSurface(back,NULL,surface,NULL)
+		if dummy = -1 then
+			puts(1, "SDL_GetBlitSurface had a hissy fit!\n")
+		end if
+		SDL_UpdateRect(surface,0,0,0,0)
+		ticks=0
+		while ticks<60 do
+			ticks2=SDL_GetTicks()
+			ticks=ticks2-ticks1
+		end while
+
+	end while
+
+end procedure
+
+--------------------------------------------------------------------
+
+init()
+main()
+cleanup()

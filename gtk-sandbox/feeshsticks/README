@@ -1,0 +1,6 @@
+This project requires:
+
+gtk+-2.0 dev libs
+Libcwiid - For wiimote interaction
+openal dev libs
+freealut dev libs

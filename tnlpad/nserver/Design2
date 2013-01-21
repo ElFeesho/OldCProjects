@@ -1,0 +1,76 @@
+Third Iteration of the TNLPad Server (Formerly NLPad)
+
+New concepts:
+
+Instead of having a huge list of clients to iterate over creating a large filthy
+for loop in which clients are probed for information in the main flow of the se-
+rver, the tasks are going to be handled by channels on their own, in a thread of
+their own.
+
+Threading:
+
+For each channel that exists a new thread of execution will run, which will last
+the lifetime of the channel.
+
+A channel's lifetime is determined by it's client content. If there are clients
+in the channel, the channel will live. If the channel has been registered and it
+has had clients in it within a certain time boundary it will stay alive. E.g.
+
+Client XYZ registers #ABC, all the clients leave #ABC. The channel will continue
+to live until a, for now unspecified, amount of time has passed. If the lifetime
+of the channel expires, the channel's thread will join.
+
+Pseudo Code for Channel Run routine:
+
+void Channel::run()
+{
+	while(alive)
+	{
+		pthread_mutex_lock(CHANNEL_LOCK); // Make sure clients aren't added whilst
+													 // halfway through processing commands.
+		for(vec<Client*>::iter *it = clients->begin(); it!=clients->end();)
+		{
+			if((*it)->get_data())
+			{
+				// Process data
+				if(client_left) // client joined another channel - don't free!
+					it = clients->erase(it);
+				if(client_quit) // client bailed so delete them
+				{
+					Client::kill((*it)); // Somehow remove client from client list.
+					it = clients->erase(it);
+					if(registered)
+						time_to_live = time(NULL)+60*60; // An hour to live
+				}
+			}
+		}
+		if(clients->size()==0)
+		{
+			if(registered)
+			{
+				if(time(NULL)>time_to_live))
+					alive = false
+			}
+			else
+				alive = false;
+		}
+		pthread_mutex_unlock(CHANNEL_LOCK);
+	}
+}
+
+The server will have a stack of pending clients as well as a list of channels 
+that already have clients allocated to them from a potentially huge active 
+Client list.
+
+The Handshake Procedure:
+
+Client Connects to Server
+Client gets added to Server's Client list
+Client Sends Nickname
+Server sends Nickname back (if a nickname is already taken, the client will be renamed- may just refuse connection)
+Client Attempts to join channel
+Server finds associated channel and gives the channel a new client to process.
+
+Simple no?
+
+All done :D

@@ -1,0 +1,770 @@
+~~Formerly Nonlogic Pad Network Specification~~
+
+~~Some notation used~~
+
+A network packet will look like
+
+	[ some data] [some data] [some data]
+	
+Where square brackets make it clear where a 'chunk' of information ends and begins. The size of chunks
+should be made clear either within the packet or in the text preceeding it.
+
+When a packet header id is used, the number in the bracket (in hex) following it, is the actual value
+of the header that will be sent over the network, e.g.
+
+login(0x10), would mean a login packet, and it's header byte will be 0x10.
+
+ALL NUMERIC DATA TRANSMITTED FROM THE CLIENT SHOULD BE IN BIG ENDIAN FORMAT!
+
+~~Intro~~
+
+NLPad uses a very very simple protocol, which follows a simple structure like:
+
+[1 byte header][1 byte user id][data ...]
+
+Depending on the header, depends on how much trailing data will be received to the socket. Also, it is
+important to realise that every command the server sends to the client will be accompanied by a second
+byte following the header, which will be the 'id' of what sent the data.
+
+E.g.
+
+Client 'Paul' draws a line, network data would be something like:
+
+	[line header (0x01)] [0x05 (Paul's id (his socket number))][x ... y... etc]
+	
+Why does every command send an id? Well, it's important to be able to find out who is sending what for a
+couple of reasons, but mainly for ignoring data received. Even the data that can only ever be sent from
+the server will have an id (of -1), but you won't be able (well you shouldn't) ignore that data.
+
+Header and id is a rule for no other reason than simplifying processing on the client's end.
+
+~~Connection / Logging in~~
+
+Upon connecting to the server, the client needs to send a nick(0x08), a channel(0x0D) along with optional meta data like
+name(0x11), website(0x12) and email(0x13) address. Once the client has sent this data, the client must send a login(0x10) 
+packet.
+
+The nick packet must be 17 bytes long, 0 padded. The nick is a constant length, because it will be stored
+by the server for as long as the client is connected; so if it was to be longer, more data would be used
+when 255 clients are connected, the maximum that this 'protocol' supports.
+
+A sample nick packet:
+
+	[0x10]['F']['e']['e']['s']['h'][0][0][0][0][0][0][0][0][0][0][0]
+
+The channel packet must be in the same format, but with the channel header (0x0D). Channels are only validated
+on the client side to contain a # as the first character of the channel name. This is merely to force the 
+IRC style system upon the user.
+
+The name, website and email packets follow the same format as the nick and channel packet, except they must be
+33 bytes long, that is 32 characters worth of name, website and email address each.
+
+Example name packet:
+
+	[0x11]['C']['h']['r']['i']['s'][' ']['A']['n']['t']['h']['o']['n']['y'][' ']['J']['a']['v']['i']['e']['r'][' ']['S']['a']['w']['c']['z']['u']['k'][0][0][0][0]
+
+The login packet is just one byte, a 0x10.
+
+	[0x10]
+	
+The client can't really send an ID with every packet, as it never really finds out which file descriptor it is
+using on the server.
+
+~~Disconnection~~
+
+A disconnect(0x04) packet needs to be sent when the client is exitting or disconnecting from the server, if it doesn't
+the server will not know that the client doesn't exist, and will suffer a 'SIGPIPE', (which currently! isn't handled very
+well!,) because the client's socket is unplugged.
+
+The disconnect packet is just one byte:
+	
+	[0x04]
+
+~~ Drawing Packets ~~
+
+Perhaps the most important of all the drawing functions NLPad supports. Lines. The line(0x01) packet is pretty simple, but
+pretty long at the same time.
+
+Network bandwidth isn't cheap, but if the data your sending doesn't reach the minimum transmission unit (the line packet is
+only 30 bytes) then we aren't wasting network bandwidth.
+
+Line packet format is the header (0x01), the first x (4 byte int), the first y (4 byte int), the second x (4 byte int), the
+second y (4 byte int), red value (0-65535)(4 byte int), green value (0-65535)(4 byte int), blue value (0-65535)(4 byte int)
+and stroke width (1 byte (1-15))
+
+An example line that would draw a red line that was 15pixels wide from 8,15 to 32,64 would be
+
+	[0x01][0x00000008][0x0000000F][0x00000020][0x00000040][0x0000FFFF][0x00000000][0x00000000][0x0F]
+	
+The eraser tool simply re-uses the line packet, but presets the colours all to max value to draw a white line.
+
+A valid observation would be, "Why are you using 4 byte integers for the x and y position of lines? They surely will never 
+reach values of 4,294,967,295? And why are the colours the same?". There is no good reason for this, so they might change
+in the future, but as for network efficiency, this won't impact network traffic much if at all.
+
+Rectangles are not sent as a combination of 4 lines, but infact the rectangle(0x0A) packet is the size of just one line.
+It follows the exact same structure as the line packet, but the second x and second y values dictate where the rectangle's
+bottom right point will be.
+
+Circles, or more correctly 'ovals' are send in a similar way that rectangles and lines are. The circle(0x1C) packet's
+x and y values determine the two points the circle is stretched across. 
+
+The bucket fill works by sending just the header, an x and y position and the colour to be used to flood the screen.
+
+The bucket fill(0x0B) packet looks like:
+	
+		[0x0B][x (4 byte int)][y (4 byte int)][r (0-65535) (4 byte int)][g (0-65535) (4 byte int)][b (0-65535) (4 byte int)]
+
+Clearing the whole canvas can be achieved by sending the clear(0x06) packet. This packet is only the header on it's own.
+
+~~ Text Data ~~
+
+Sending a message isn't so complex, but since a message(0x02) packet could possibly bounce over the minimum size of a packet
+I decided that the messages should only ever be 255 at maximum. The message packet is an elasticated packet, that is, it
+stretches to the size it needs to be. The packet starts off with the header 0x02, and then also 0x02 (not to be confused with
+the header), which denotes the beginning of a bunch of text data. The text data should then be added to the packet and capped
+off with 0x03 which denotes the end of text data. An example will simplify the details of this.
+
+	[0x02][0x02]['H']['u']['l']['l']['o'][0x03]
+	
+An action(0x0C) packet is essentially a message, and is formatted accordingly.
+
+A client's nick name can be updated at any time, so just to repeat from the login section above, the nick(0x09) packet must be
+17 bytes long, the first byte being the header, and the rest of the data being a 0 padded string which will be used as the
+client's nick from now on.
+
+The client may switch channels at any time, and the same technique as explained above is used again. The channel(0x0D) packet
+must be 17 bytes long, 1 byte being the header, and the other 16 being a 0 padded string which will later become the client's
+channel.
+
+The topic to the channel can be changed by sending a topic(0x0E) packet, which follows the same format as a message. The topic
+can only be 128 bytes long however.
+
+
+void network_send_register(char *pass)
+{
+	if(globals_connected)
+	{
+		unsigned char *data = g_malloc0(17);
+		sprintf((char*)data,"\x15%s",pass);
+		network_send(data,17);
+	}
+}
+
+void network_send_login(char *pass)
+{
+	if(globals_connected)
+	{
+		unsigned char *data = g_malloc0(17);
+		sprintf((char*)data,"\x14%s",pass);
+		network_send(data,17);
+	}
+}
+
+void network_send_lock_chan()
+{
+	if(globals_connected)
+	{
+		unsigned char data[2] = { '\0' };
+		data[0] = '\x17';
+		network_send(data,1);
+	}
+}
+
+void network_send_lock_topic()
+{
+	if(globals_connected)
+	{
+		unsigned char data[2] = { '\0' };
+		data[0] = '\x18';
+		network_send(data,1);
+	}
+}
+
+void network_send_take_voice(char id)
+{
+	if(globals_connected)
+	{
+		unsigned char data[2] = { '\0' };
+		data[0] = '\x1A';
+		data[1] = id;
+		network_send(data,2);
+	}
+}
+
+void network_send_take_ink(char id)
+{
+	if(globals_connected)
+	{
+		unsigned char data[2] = { '\0' };
+		data[0] = '\x19';
+		data[1] = id;
+		network_send(data,2);
+	}
+}
+
+void network_send_give_voice(char id)
+{
+	if(globals_connected)
+	{
+		unsigned char data[2] = { '\0' };
+		data[0] = '\x1D';
+		data[1] = id;
+		network_send(data,2);
+	}
+}
+
+void network_send_give_ink(char id)
+{
+	if(globals_connected)
+	{
+		unsigned char data[2] = { '\0' };
+		data[0] = '\x1B';
+		data[1] = id;
+		network_send(data,2);
+	}
+}
+
+gboolean network_receive(GIOChannel *source, GIOCondition condition, gpointer data)
+{
+	if((condition&G_IO_HUP)==G_IO_HUP)
+	{
+		chat_append("*** Server closed the connection!\n");
+		error_dialog("Server closed the connection!");
+		globals_connected = 0;
+		gnet_tcp_socket_delete(globals_tcp_sock);
+		toolbar_switch_conn();
+		client_clear_list();
+		return 0;
+	}
+	else if((condition&G_IO_ERR)==G_IO_ERR)
+	{
+		chat_append("*** Connection error, closing conection!\n");
+		error_dialog("Connection error, closing conection!");
+		globals_connected = 0;
+		gnet_tcp_socket_delete(globals_tcp_sock);
+		toolbar_switch_conn();
+		client_clear_list();
+		return 0;
+	}
+	else if((condition&G_IO_IN) == G_IO_IN)
+	{
+		GIOError error = G_IO_ERROR_NONE;
+		char header;
+		char idn;
+		gsize n = 1;
+		error = gnet_io_channel_readn(globals_sock_chan, &header, n, &n); 
+		if(n == 0)
+		{
+			/* Assume disconnect */
+			globals_connected = 0;
+			toolbar_switch_conn();
+			gnet_tcp_socket_delete(globals_tcp_sock);
+			error_dialog("Error receiving data - disconnecting");
+			return 0;
+		}
+		if (error != G_IO_ERROR_NONE) 
+		{
+			error_dialog("Error receiving network data!");
+			return 0;
+		}
+		
+		n = 1;
+		error = gnet_io_channel_readn(globals_sock_chan, &idn, n, &n); 
+		if (error != G_IO_ERROR_NONE) 
+		{
+			error_dialog("Error receiving client ID len\n");
+			return 0;
+		}
+		
+		if(header==0x01) /* Line received */
+		{
+			n = 29;
+			unsigned char data[29] = { 0 };
+			error = gnet_io_channel_readn(globals_sock_chan, data, n, &n);
+			if (error != G_IO_ERROR_NONE) 
+			{
+				error_dialog("Error receving line data");
+				return 0;
+			}		
+			char stroke;
+			int32_t x,y,x2,y2,r,g,b;
+			gnet_unpack("!7ib",(char*)data,29,&x,&y,&x2,&y2,&r,&g,&b,&stroke);
+			draw_line(x,y,x2,y2,r,g,b,stroke);
+#ifdef LOG
+			if(client_get_logged(idn))
+			{
+				FILE *log_file = fopen(g_strdup_printf("%s.log",client_get_name(idn)),"a");
+				fprintf(log_file,"\x01%c",idn);
+				fwrite(&x,1,4,log_file);
+				fwrite(&y,1,4,log_file);
+				fwrite(&x2,1,4,log_file);
+				fwrite(&y2,1,4,log_file);
+				fwrite(&r,1,4,log_file);
+				fwrite(&g,1,4,log_file);
+				fwrite(&b,1,4,log_file);
+				fprintf(log_file,"%c\n",stroke);
+				fclose(log_file);
+			}
+#endif
+		}
+		if(header==0x0A) /* Rectangle data */
+		{
+			n = 29;
+			unsigned char data[29];
+			error = gnet_io_channel_readn(globals_sock_chan, data, n, &n);
+			if (error != G_IO_ERROR_NONE) 
+			{
+				error_dialog("Error receiving data\n");
+				return 0;
+			}		
+			char stroke;
+			int32_t x,y,x2,y2,r,g,b;
+			gnet_unpack("!7ib",(char*)data,29,&x,&y,&x2,&y2,&r,&g,&b,&stroke);
+			draw_rect(x,y,x2,y2,r,g,b,stroke);
+#ifdef LOG
+			if(client_get_logged(idn))
+			{
+				FILE *log_file = fopen(g_strdup_printf("%s.log",client_get_name(idn)),"a");
+				fprintf(log_file,"\x0A%c%d%d%d%d%d%d%d%c\n",idn,x,y,x2,y2,r,g,b,stroke);
+				fclose(log_file);
+			}
+#endif
+		}
+		if(header==0x14)
+		{
+			if(idn>0)
+			{
+				chat_append(g_strdup_printf("*** %s granted you ops\n",client_get_name((int)idn)));
+				globals_has_ops = 1;
+			}
+			else
+			{
+				globals_has_ops = 1;
+				//chat_append(g_strdup_printf("*** You are now an operator\n"));
+			}
+		}
+		
+		if(header==0x1C) /* Circle data */
+		{
+			n = 29;
+			unsigned char data[29];
+			error = gnet_io_channel_readn(globals_sock_chan, data, n, &n);
+			if (error != G_IO_ERROR_NONE) 
+			{
+				error_dialog("Error receiving data\n");
+				return 0;
+			}		
+			char stroke;
+			int32_t x,y,x2,y2,r,g,b;
+			gnet_unpack("!7ib",(char*)data,29,&x,&y,&x2,&y2,&r,&g,&b,&stroke);
+			draw_circle(x,y,x2,y2,r,g,b,stroke);
+#ifdef LOG
+			if(client_get_logged(idn))
+			{
+				FILE *log_file = fopen(g_strdup_printf("%s.log",client_get_name(idn)),"a");
+				fprintf(log_file,"\x1C%c%d%d%d%d%d%d%d%c\n",idn,x,y,x2,y2,r,g,b,stroke);
+				fclose(log_file);
+			}
+#endif
+		}
+		if(header==0x02) /* Message received */
+		{
+			/* How Messages Work ~~~
+			 * 
+			 * When the client sends a message to the server,
+			 * the client packs the text between two untypeable
+			 * characters, 0x02 and 0x03. If you read man ascii
+			 * you can find out what they actually mean, I've forgotten
+			 * but I chose them for a good reason. So now when the 
+			 * client receives a message, it has to find out who it's
+			 * from (first 3 bytes of the data after the header is
+			 * the sender's ID which can be cross checked from the
+			 * current client list), then the first 0x02 byte has to
+			 * be swallowed up (yum). Then it's a case of adding a
+			 * character at a time till you get to the end (0x03) then
+			 * the message is added to the chat box. If the sender's 
+			 * id is 0, then it is a server message (client disconnect
+			 * etc).
+			 */
+			
+			n = 1;
+			unsigned char curChar = 0;
+			unsigned char len = 0;
+			char *msg = malloc(258);
+			memset(msg,'\0',258);
+			while(curChar!=3)
+			{
+				error = gnet_io_channel_readn(globals_sock_chan, &curChar, n, &n);
+				if (error != G_IO_ERROR_NONE) 
+				{
+					error_dialog("Error receiving message length\n");
+					return 0;
+				}
+				if(curChar>31)
+				{
+					sprintf((char*)msg,"%s%c",msg,curChar);
+					len++;
+				}
+			}
+			if(idn>0)
+			{
+				chat_add_msg((int)idn,(char*)msg,len);
+			}
+			else
+			{
+				chat_append(g_strdup_printf("*** %s\n",(char*)msg));
+			}
+		}
+		
+		if(header==0x03) /* Client connect - Verbosely adds clients */
+		{
+			char nick[16];
+			n = 16;
+			error = gnet_io_channel_readn(globals_sock_chan, nick, n, &n); 
+			if (error != G_IO_ERROR_NONE) 
+			{
+				error_dialog("Error receiving new nick ID\n");
+				return 0;
+			}
+			client_change(nick, (int)idn);
+			char *nclient = malloc(64);
+			sprintf(nclient,"*** New Client Joined: %s\n",nick);
+			chat_append(nclient);
+			free(nclient);
+		}
+
+		if(header==0x04) /* Client Disconnect */
+		{
+			char *msg = malloc(128);
+			if(idn>0)
+				sprintf(msg, "*** Client Quit: %s\n",client_get_name((int)idn));
+			else
+			{
+				gnet_tcp_socket_delete(globals_tcp_sock);
+		
+				globals_connected = 0;
+				toolbar_switch_conn();
+				return 0;
+			}
+			chat_append(msg);
+			client_remove((int)idn);
+		}
+		if(header==0x05) /* Client Changed channel */
+		{
+			char *msg = malloc(128);
+			sprintf(msg, "*** Client Left the Channel: %s\n",client_get_name((int)idn));
+			chat_append(msg);
+			client_remove((int)idn);
+		}
+		if(header==0x06) /* Board Cleanup */
+		{
+			char *msg = malloc(128);
+			sprintf(msg,"*** %s cleared the board\n",client_get_name((int)idn));
+			chat_append(msg);
+			draw_clear_buffers();
+#ifdef LOG
+			if(client_get_logged(idn))
+			{
+				FILE *log_file = fopen(g_strdup_printf("%s.log",client_get_name(idn)),"a");
+				fprintf(log_file,"\x06%c\n",idn);
+				fclose(log_file);
+			}
+#endif
+		}
+		/* 0x07 unused now */
+		if(header==0x09) /* Name change */
+		{
+			char nname[16];
+			n = 16;
+			error = gnet_io_channel_readn(globals_sock_chan, nname, n, &n); 
+			if (error != G_IO_ERROR_NONE) 
+			{
+				error_dialog("Error receiving new nick len\n");
+				return 0;
+			}
+			char *msg = malloc(128);
+			if(client_get_name((int)idn)!=NULL)
+			{
+				if(idn!=-1)
+					sprintf(msg,"*** %s changed name to %s\n",client_get_name((int)idn),nname);
+				else
+				{
+					sprintf(msg,"*** Server changed your name to %s\n",nname);
+					strcpy(globals_nick,nname);
+				}
+				chat_append(msg);
+			}
+			client_change(nname, (int)idn);
+		}
+		if(header==0x0B) /* Bucket Fill */
+		{
+			n = 20;
+			unsigned char data[20] = { 0 };
+			error = gnet_io_channel_readn(globals_sock_chan, data, n, &n);
+			if (error != G_IO_ERROR_NONE) 
+			{
+				error_dialog("Error receiving data\n");
+				return 0;
+			}
+			int32_t x,y,r,g,b;
+			gnet_unpack("!5i",(char*)data,20,&x,&y,&r,&g,&b);
+			int w, h;
+			gdk_drawable_get_size(main_window_canvas_win,&w,&h);
+			if(x < w && y < h)
+			{
+				draw_flood_fill(x,y,draw_16_to_8(r),draw_16_to_8(g),draw_16_to_8(b));
+#ifdef LOG
+				if(client_get_logged(idn))
+				{
+					FILE *log_file = fopen(g_strdup_printf("%s.log",client_get_name(idn)),"a");
+					fprintf(log_file,"\x0B%c",idn);
+					fwrite(&x,1,4,log_file);
+					fwrite(&y,1,4,log_file);
+					fwrite(&r,1,4,log_file);
+					fwrite(&g,1,4,log_file);
+					fwrite(&b,1,4,log_file);
+					fprintf(log_file,"\n");
+					fclose(log_file);
+				}
+#endif
+			}
+		}
+		if(header==0x0C) /* Action received */
+		{
+			n = 1;
+			unsigned char curChar = 0;
+			unsigned char len = 0;
+			char *msg = malloc(258);
+			memset(msg,'\0',258);
+			while(curChar!=3)
+			{
+				error = gnet_io_channel_readn(globals_sock_chan, &curChar, n, &n);
+				if (error != G_IO_ERROR_NONE) 
+				{
+					error_dialog("Error receiving msg len\n");
+					return 0;
+				}
+				if(curChar>31)
+				{
+					sprintf((char*)msg,"%s%c",msg,curChar);
+					len++;
+				}
+			}
+			if(idn!=0)
+				chat_add_action((int)idn,(char*)msg,len);
+		}
+		if(header==0x0E) /* Topic received */
+		{
+			n = 1;
+			unsigned char curChar = 0;
+			unsigned char len = 0;
+			char *msg = malloc(130);
+			memset(msg,'\0',130);
+			while(curChar!=3)
+			{
+				error = gnet_io_channel_readn(globals_sock_chan, &curChar, n, &n);
+				if (error != G_IO_ERROR_NONE) 
+				{
+					error_dialog("Error receiving topic length\n");
+					return 0;
+				}
+				if(curChar>31)
+				{
+					sprintf((char*)msg,"%s%c",msg,curChar);
+					len++;
+				}
+			}
+			char *change_message = malloc(128);
+			if(idn!=-1)
+				sprintf(change_message,"*** Topic was changed by %s\n",client_get_name((int)idn));
+			else
+				change_message = g_strdup_printf("*** Received Topic from Channel\n");
+				
+			chat_append(change_message);
+			gtk_entry_set_text(GTK_ENTRY(main_window_topic),(char*)msg);
+		}
+		if(header==0x0F) /* Client list update - Silently adds users*/
+		{
+			char nick[16];
+			n = 16;
+			error = gnet_io_channel_readn(globals_sock_chan, nick, n, &n); 
+			if (error != G_IO_ERROR_NONE) 
+			{
+				error_dialog("Error receiving new nick ID\n");
+				return 0;
+			}
+			client_change(nick, (int)idn);
+		}
+		if(header==0x11) /* REAL Name change */
+		{
+			char nname[33];
+			n = 32;
+			error = gnet_io_channel_readn(globals_sock_chan, nname, n, &n); 
+			if (error != G_IO_ERROR_NONE) 
+			{
+				error_dialog("Error receiving new name\n");
+				return 0;
+			}
+			client_set_name(nname, (int)idn);
+		}
+		if(header==0x12) /* Website change */
+		{
+			char nname[33];
+			n = 32;
+			error = gnet_io_channel_readn(globals_sock_chan, nname, n, &n); 
+			if (error != G_IO_ERROR_NONE) 
+			{
+				error_dialog("Error receiving new name\n");
+				return 0;
+			}
+			client_set_website(nname, (int)idn);
+		}
+		
+		if(header==0x13) /* Email change */
+		{
+			char nname[33];
+			n = 32;
+			error = gnet_io_channel_readn(globals_sock_chan, nname, n, &n); 
+			if (error != G_IO_ERROR_NONE) 
+			{
+				error_dialog("Error receiving new name\n");
+				return 0;
+			}
+			client_set_email(nname, (int)idn);
+		}
+		if(header==0x1E) /* Client list update - Silently adds users*/
+		{
+			char channel[16];
+			n = 16;
+			error = gnet_io_channel_readn(globals_sock_chan, channel, n, &n); 
+			if (error != G_IO_ERROR_NONE) 
+			{
+				error_dialog("Error receiving new channel\n");
+				return 0;
+			}
+			strcpy(globals_channel,channel);
+			chat_append(g_strdup_printf("*** Joined %s\n",channel));
+		}
+		if(header==0x1F) /* Client had their status changed */
+		{
+			n = 1;
+			char status = 0;
+			error = gnet_io_channel_readn(globals_sock_chan, &status, n, &n); 
+			if (error != G_IO_ERROR_NONE) 
+			{
+				error_dialog("Error receiving new nick ID\n");
+				return 0;
+			}
+			char cur_status = client_get_status(-1);
+			if(cur_status == -1)
+			{
+				fprintf(stderr, "Couldn't find the client to set the status to 1FS!\n");
+				return 1; // The show can still go on
+			}
+			client_set_status(-1,(int)status);
+			if(idn>0)
+			{
+				if((status&USER_INK)==USER_INK && (cur_status&USER_INK)==0)
+				{
+					// It's an important message, so I'll write it in my own ink
+					chat_append(g_strdup_printf("*** %s gave you ink\n",client_get_name((int)idn)));
+					globals_has_ink = 1;
+					main_window_signals_on();
+				}
+				if((status&USER_INK)==0 && (cur_status&USER_INK)==USER_INK)
+				{
+					// No more ink for mr rapid fire
+					chat_append(g_strdup_printf("*** %s took away your ink\n",client_get_name((int)idn)));
+					globals_has_ink = 0;
+					main_window_signals_off();
+					/* Maybe just remove call backs to action on mouse pressing on the canvas? */
+				}
+				if((status&USER_VOICE)==USER_VOICE && (cur_status&USER_VOICE)==0)
+				{
+					// SPREAD THE WORD
+					chat_append(g_strdup_printf("*** %s gave you voice\n",client_get_name((int)idn)));
+					globals_has_voice = 1;
+				}
+				if((status&USER_VOICE)==0 && (cur_status&USER_VOICE)==USER_VOICE)
+				{
+					//First he giveth, then he taketh away
+					chat_append(g_strdup_printf("*** %s took away your voice\n",client_get_name((int)idn)));
+					globals_has_voice = 0;
+				}
+			}
+			else
+			{
+				if((status&USER_INK)==USER_INK)
+				{
+					globals_has_ink = 1;
+					main_window_signals_on();
+				}
+				if((status&USER_INK)==0)
+				{
+					globals_has_ink = 0;
+					main_window_signals_off();
+				}
+				if((status&USER_VOICE)==USER_VOICE)
+				{
+					globals_has_voice = 1;
+				}
+				if((status&USER_VOICE)==0)
+				{
+					globals_has_voice = 0;
+				}
+			}
+		}
+		if(header==0x20) /* Another Client had their status changed by some one*/
+		{
+			n = 1;
+			char by_who = 0;
+			error = gnet_io_channel_readn(globals_sock_chan, &by_who, n, &n); 
+			if (error != G_IO_ERROR_NONE) 
+			{
+				error_dialog("Failed finding out who set someone's status\n");
+				return 0;
+			}
+			
+			n = 1;
+			char status = 0;
+			error = gnet_io_channel_readn(globals_sock_chan, &status, n, &n); 
+			if (error != G_IO_ERROR_NONE) 
+			{
+				error_dialog("Error receiving new nick ID\n");
+				return 0;
+			}
+			
+			char cur_status = client_get_status(idn);
+			if(cur_status == -1)
+			{
+				fprintf(stderr, "Couldn't find the client to set the status to 20! %d %d\n", idn, status);
+				return 1; // The show can still go on
+			}
+			client_set_status(idn,(int)status);
+			if(by_who>0)
+			{
+				if((status&USER_INK)==USER_INK && (cur_status&USER_INK)==0)
+				{
+					// It's an important message, so I'll write it in my own ink
+					chat_append(g_strdup_printf("*** %s was given ink by %s\n",client_get_name((int)idn),client_get_name((int)by_who)));
+				}
+				if((status&USER_INK)==0 && (cur_status&USER_INK)==USER_INK)
+				{
+					// No more ink for mr rapid fire
+					chat_append(g_strdup_printf("*** %s had ink taken away by %s\n",client_get_name((int)idn),client_get_name((int)by_who)));
+					/* Maybe just remove call backs to action on mouse pressing on the canvas? */
+				}
+				if((status&USER_VOICE)==USER_VOICE && (cur_status&USER_VOICE)==0)
+				{
+					// SPREAD THE WORD
+					chat_append(g_strdup_printf("*** %s was given voice by %s\n",client_get_name((int)idn),client_get_name((int)by_who)));
+				}
+				if((status&USER_VOICE)==0 && (cur_status&USER_VOICE)==USER_VOICE)
+				{
+					//First he giveth, then he taketh away
+					chat_append(g_strdup_printf("*** %s had voice taken away by %s\n",client_get_name((int)idn),client_get_name((int)by_who)));
+				}
+			}
+		}
+	}

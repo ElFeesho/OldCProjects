@@ -1,0 +1,494 @@
+(II): Server started
+(II): Server started
+(II): Server started
+(II): Server started
+(II): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(!!): Server Ended, caught a signal
+(II): Server started
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(WW): Client exitted abnormally
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(II): Client disconnected
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(II): Client changed nick
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(II): Server started
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(II): Client Joined
+(II): Client changed nick
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(II): Server started
+(II): Client Joined
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(II): Client disconnected
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(II): Client disconnected
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(II): Client disconnected
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(WW): Client exitted abnormally
+(II): Client disconnected
+(II): Client Joined
+(II): Client Joined
+(II): Client disconnected
+(II): Client disconnected
+(II): Client Joined
+(II): Client Joined
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(WW): Client exitted abnormally
+(II): Server started
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(II): Client changed nick
+(WW): Client exitted abnormally
+(II): Client disconnected
+(II): Client Joined
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client disconnected
+(II): Client disconnected
+(II): Client disconnected
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(II): Client disconnected
+(II): Client Joined
+(WW): Client exitted abnormally
+(II): Client Joined
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(!!): Failed to start server
+(II): Server started
+(II): Client Joined
+(!!): Server Ended, caught a signal
+(II): Server started
+(!!): Failed to start server
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(II): Client disconnected
+(II): Client disconnected
+(II): Client Joined
+(II): Client Joined
+(II): Client disconnected
+(II): Client disconnected
+(II): Client Joined
+(II): Client Joined
+(II): Client disconnected
+(II): Client disconnected
+(II): Client Joined
+(II): Client Joined
+(II): Client disconnected
+(II): Client disconnected
+(II): Server started
+(!!): Failed to start server
+(II): Server started
+(!!): Failed to start server
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(!!): Server Ended, caught a signal
+(II): Server started
+(!!): Failed to start server
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(!!): Server Ended, caught a signal
+(II): Server started
+(!!): Failed to start server
+(II): Server started
+(!!): Failed to start server
+(II): Server started
+(!!): Failed to start server
+(II): Server started
+(II): Client Joined
+(II): Client Joined
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client changed nick
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(WW): Client exitted abnormally
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(!!): Server Ended, caught a signal
+(II): Server started
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Server started
+(!!): Server Ended, caught a signal
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(WW): Client exitted abnormally
+(WW): Client exitted abnormally
+(WW): Client exitted abnormally
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(WW): Client exitted abnormally
+(WW): Client exitted abnormally
+(!!): Server Ended, caught a signal
+(II): Server started
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(WW): Client exitted abnormally
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(WW): Client exitted abnormally
+(!!): Server Ended, caught a signal
+(II): Server started
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(II): Client disconnected
+(II): Client Joined
+(II): Client changed nick
+(II): Client disconnected
+(!!): Server Ended, caught a signal

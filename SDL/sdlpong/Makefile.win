@@ -1,0 +1,14 @@
+OBJS=ball.wo ent.wo main.wo paddle.wo engine.wo SDLW.wo score.wo lpaddle.wo
+CFLAGS=`sdl-config --cflags` -pipe -O2 -g -I/usr/local/win/gtk/include -mwindows
+LIBS=-L/usr/local/win/gtk/lib/ -lmingw32 -lSDLmain -lSDL -mwindows -lSDL_image -llua 
+PROG=pong.exe
+CC=i586-mingw32msvc-g++
+
+all:$(OBJS)
+	$(CC) $(OBJS) $(LIBS) -o $(PROG)
+
+%.wo:%.cpp
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+clean:
+	rm $(OBJS) $(PROG) -f

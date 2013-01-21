@@ -1,0 +1,22 @@
+#include "GPL.txt"
+
+Nonlogicpad is a collaborative drawing program, which allows multiple users
+under partitions of a channel system similar to IRC, to collectively and 
+collaboratively draw graphics or diagrams.
+
+Possible usages could include, design work, general explanations of complex
+visual scenarios where text falls short, or to just play noughts and crosses,
+or tic tac toe.
+
+In order for NLPad to compile, you need:
+
+GTK+-2.0 (And all it's requirements)
+Gnet-2.0 (www.gnetlibrary.org)
+Libxml2
+
+Once you have all these development libraries, NLPad should compile.
+
+In order for NLPad to be useful, it will need to connect to a server.
+
+nlpad.nonlogic.org is usually up, but if it is not, compile the server
+for yourself and connect to it.

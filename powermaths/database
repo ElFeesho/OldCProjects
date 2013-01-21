@@ -1,0 +1,40 @@
+Database design
+
+Group 				KS3
+Grade/Level			1-10/A*-G
+Type				Numbers, Algebra
+Topic				"Standard Form", "Fractions", "Long division"
+SubTopic			Addition
+Keyword				Blah,blah,blah
+Filename			blah.svg
+
+groups table
++-------------------+---------------------------+
+| Group ID INTEGER	|	Group_Name VARCHAR(16)  |
++-------------------+---------------------------+
+
+grades Table
++-------------------+---------------------+----------------+
+| Grade_ID INTEGER  | Group_ID INTEGER FK | Grade_Name     |
++-------------------+---------------------+----------------+
+
+Type Table
++-------------------+-------------+
+| Type_ID INTEGER   |  Type_Name  |
++-------------------+-------------+
+
+Topic
++------------------+-------------+
+| Topic_ID INTEGER | Topic_Name  |
++------------------+-------------+
+
+Sub Topic
++----------------------+--------------+
+| Subtopic_ID INTEGER  | STopic_Name  |
++----------------------+--------------+
+
+Questions Table
++-------------------+----------------------+-----------------------+-------------------------+---------------+---------------+----------------+------------------------+
+| Quest_ID INTEGER  | Caption VARCHAR(255) | Filename VARCHAR(128) | Grade Foreign Key! INT  | Level FK Int  | Topic FK INT  | STopic FK INT  |  Keywords VARCHAR(255) |
++-------------------+----------------------+-----------------------+-------------------------+---------------+---------------+----------------+------------------------+
+

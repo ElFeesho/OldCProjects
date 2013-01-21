@@ -1,0 +1,24 @@
+#############################
+#       Nonlogic Pad        #
+#                           #
+#   Nonlogic Team Project   #
+#############################
+
+OBJS=main.wo network.wo globals.wo con_diag.wo error.wo nick_diag.wo grid_diag.wo \
+toolbar.wo colour_widget.wo draw.wo main_window.wo config.wo chat.wo client.wo \
+string_ops.wo chan_diag.wo colour_diag.wo about_diag.wo banner.wo image_dump.wo
+PKG_CONFIG_PATH=/usr/local/win/gtk/lib/pkgconfig/
+CFLAGS=`pkg-config --cflags gtk+-2.0 gnet-2.0 && xml2-config --cflags` -Wall -g -I/usr/local/win/gtk/include/
+LIBS=`pkg-config --libs gtk+-2.0 gnet-2.0 && xml2-config --libs` -g
+
+PROG=nlpad.exe
+
+all:$(OBJS)
+	i586-mingw32msvc-gcc -o $(PROG) $(OBJS) $(LIBS)
+
+%wo:%c
+	i586-mingw32msvc-gcc -c $(CFLAGS) -o $@ $<
+
+clean:
+	rm -f $(PROG) $(OBJS)
+

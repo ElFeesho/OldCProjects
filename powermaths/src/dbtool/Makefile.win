@@ -1,0 +1,21 @@
+OBJS=main.wo window.wo groups.wo
+ICON=icon.wio
+PKG_CONFIG_PATH=/usr/local/win/gtk/lib/pkgconfig/
+LIBS=`pkg-config --libs gtk+-2.0 sqlite3 librsvg-2.0` -L/usr/local/win/gtk/lib/
+
+CFLAGS=`pkg-config --cflags gtk+-2.0 sqlite3 librsvg-2.0` -Wall -g -O0 -pipe -I/usr/local/win/gtk/include/
+PROG=dbtool.exe
+
+all:$(OBJS) $(ICON)
+	@i586-mingw32msvc-gcc -o $(PROG) $(OBJS) $(ICON) $(LIBS)
+	@echo LDD $(OBJS)
+
+%wo:%c
+	@i586-mingw32msvc-gcc -c -o $@ $(CFLAGS) $< 
+	@echo CC $<
+
+$(ICON):
+	i586-mingw32msvc-windres -i icon.rc -o icon.wio
+
+clean:
+	rm -f $(PROG) $(OBJS)

@@ -1,0 +1,104 @@
+style "drawingArea"
+{
+	bg[ACTIVE] = { 1.0, 1.0, 1.0 }	
+	bg[NORMAL] = { 1.0, 1.0, 1.0 }
+	bg[PRELIGHT] = { 1.0, 1.0, 1.0 }
+	bg[SELECTED] = { 1.0, 1.0, 1.0 }
+	bg[INSENSITIVE] = { 1.0, 1.0, 1.0 }
+	base[ACTIVE] = { 1.0, 1.0, 1.0 }	
+	base[NORMAL] = { 1.0, 1.0, 1.0 }
+	base[PRELIGHT] = { 1.0, 1.0, 1.0 }
+	base[SELECTED] = { 1.0, 1.0, 1.0 }
+	base[INSENSITIVE] = { 1.0, 1.0, 1.0 }
+}
+
+style "textView" 
+{ 
+	bg[ACTIVE] = { 0.0, 0.0, 0.0 }	
+	bg[NORMAL] = { 0.0, 0.0, 0.0 }
+	bg[PRELIGHT] = { 0.0, 0.0, 0.0 }
+	bg[SELECTED] = { 0.0, 0.0, 0.0 }
+	bg[INSENSITIVE] = { 0.0, 0.0, 0.0 }
+	base[ACTIVE] = { 0.0, 0.0, 0.0 }	
+	base[NORMAL] = { 0.0, 0.0, 0.0 }
+	base[PRELIGHT] = { 0.0, 0.0, 0.0 }
+	base[SELECTED] = { 0.0, 0.0, 0.75 }
+	base[INSENSITIVE] = { 0.0, 0.0, 0.0 }
+	text[ACTIVE] = "#fff"
+	text[NORMAL] = "#fff"
+	text[PRELIGHT] = "#fff"
+	text[INSENSITIVE] = "#fff"
+	text[SELECTED] = "#fff"
+	fg[ACTIVE] = "#fff"
+	fg[NORMAL] = "#fff"
+	fg[PRELIGHT] = "#fff"
+	fg[INSENSITIVE] = "#fff"
+	fg[SELECTED] = "#fff"
+	font_name = "arial bold 32"
+}
+
+style "textEntry" = "textView"
+{ 
+	bg[ACTIVE] = { 1.0, 1.0, 1.0 }	
+	bg[NORMAL] = { 1.0, 1.0, 1.0 }
+	bg[PRELIGHT] = { 1.0, 1.0, 1.0 }
+	bg[SELECTED] = { 1.0, 1.0, 1.0 }
+	bg[INSENSITIVE] = { 1.0, 1.0, 1.0 }
+	base[ACTIVE] = { 1.0, 1.0, 1.0 }	
+	base[NORMAL] = { 1.0, 1.0, 1.0 }
+	base[PRELIGHT] = { 1.0, 1.0, 1.0 }
+	base[SELECTED] = { 0.0, 0.0, 0.75 }
+	base[INSENSITIVE] = { 1.0, 1.0, 1.0 }
+	text[ACTIVE] = "#000"
+	text[NORMAL] = "#000"
+	text[PRELIGHT] = "#000"
+	text[INSENSITIVE] = "#000"
+	text[SELECTED] = "#fff"
+	fg[ACTIVE] = "#000"
+	fg[NORMAL] = "#000"
+	fg[PRELIGHT] = "#000"
+	fg[INSENSITIVE] = "#000"
+	fg[SELECTED] = "#fff"
+}
+
+style "buttonTxt"
+{
+	font_name = "arial bold 32"
+	text[ACTIVE] = "#000"
+	text[NORMAL] = "#000"
+	text[PRELIGHT] = "#000"
+	text[INSENSITIVE] = "#000"
+	text[SELECTED] = "#000"
+	fg[ACTIVE] = "#000"
+	fg[NORMAL] = "#000"
+	fg[PRELIGHT] = "#000"
+	fg[INSENSITIVE] = "#000"
+	fg[SELECTED] = "#000"
+}
+
+style "window"
+{
+	bg[NORMAL] = "#000"
+}
+
+style "label"
+{
+	text[ACTIVE] = "#fff"
+	text[NORMAL] = "#fff"
+	text[PRELIGHT] = "#fff"
+	text[INSENSITIVE] = "#fff"
+	text[SELECTED] = "#fff"
+	fg[ACTIVE] = "#fff"
+	fg[NORMAL] = "#fff"
+	fg[PRELIGHT] = "#fff"
+	fg[INSENSITIVE] = "#fff"
+	fg[SELECTED] = "#fff"
+	font_name = "arial bold 28"
+}
+
+	
+class "GtkTextView" style "textView"
+widget_class "*<GtkButton>.GtkLabel" style "buttonTxt"
+class "GtkDrawingArea" style "drawingArea"
+class "GtkViewport" style "window"
+widget_class "*<GtkTable>.GtkLabel" style "label"

@@ -1,0 +1,15 @@
+style "canvas"
+{
+	bg[ACTIVE] = { 1.0, 1.0, 1.0 }	
+	bg[NORMAL] = { 1.0, 1.0, 1.0 }
+	bg[PRELIGHT] = { 1.0, 1.0, 1.0 }
+	bg[SELECTED] = { 1.0, 1.0, 1.0 }
+	bg[INSENSITIVE] = { 1.0, 1.0, 1.0 }
+	base[ACTIVE] = { 1.0, 1.0, 1.0 }	
+	base[NORMAL] = { 1.0, 1.0, 1.0 }
+	base[PRELIGHT] = { 1.0, 1.0, 1.0 }
+	base[SELECTED] = { 0.0, 0.0, 0.75 }
+	base[INSENSITIVE] = { 1.0, 1.0, 1.0 }
+}
+
+class "GtkViewport" style "canvas"

@@ -1,0 +1,19 @@
+OBJS=main.wo database.wo errors.wo board.wo splash.wo browser.wo \
+draw.wo misc.wo question.wo whiteb.wo groups.wo levels.wo types.wo \
+topics.wo gtkpmbutton.wo stopic.wo gtkpmhbutton.wo search.wo gtkvimage.wo
+PKG_CONFIG_PATH=/usr/local/win/gtk/lib/pkgconfig/
+LIBS=`pkg-config --libs gtk+-2.0 sqlite3 librsvg-2.0` -L/usr/local/win/gtk/lib/
+
+CFLAGS=`pkg-config --cflags gtk+-2.0 sqlite3 librsvg-2.0` -Wall -g -O0 -pipe -I/usr/local/win/gtk/include/
+PROG=powermaths.exe
+
+all:$(OBJS)
+	@i586-mingw32msvc-gcc -o $(PROG) $(OBJS) $(LIBS)
+	@echo LDD $(OBJS)
+
+%wo:%c
+	@i586-mingw32msvc-gcc -c -o $@ $(CFLAGS) $< 
+	@echo CC $<
+
+clean:
+	rm -f $(PROG) $(OBJS)

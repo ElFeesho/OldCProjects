@@ -1,0 +1,12 @@
+AC_INIT([nlpad],[1.0.0],[gummybassist@gmail.com],[nlpad])
+AM_INIT_AUTOMAKE(AC_PACKAGE_NAME, AC_PACKAGE_VERSION)
+
+AC_PROG_CC
+AC_PROG_INSTALL
+
+PKG_CHECK_MODULES(DEP, [gtk+-2.0 gnet-2.0 libxml-2.0])
+
+AC_CONFIG_FILES([
+Makefile
+])
+AC_OUTPUT

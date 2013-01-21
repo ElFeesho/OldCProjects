@@ -1,0 +1,15 @@
+#!/bin/sh
+
+export PKG_CONFIG_LIBDIR="/usr/local/win/gtk/lib/pkgconfig":"/usr/local/win/Python25/Lib/pkgconfig"
+export PKG_CONFIG_PATH=$PKG_CONFIG_LIBDIR
+
+# pkg-config doesn't like --define-variable with these
+if [ "x`echo "$*" | grep -- --atleast-pkgconfig-version`" != x -o \
+     "x`echo "$*" | grep -- --atleast-version`" != x ]; then
+  exec "/usr/bin/pkg-config" $*
+else
+  # pygtk pulls gtk and friends, so if they sit in different prefixes then
+  # we're screwed anyway, so pygtk and friends must be relocated to the
+  # same prefix as gtk after install, if installed with win32 installer
+  exec "/usr/bin/pkg-config" --define-variable=prefix="/usr/local/win/gtk" $*
+fi

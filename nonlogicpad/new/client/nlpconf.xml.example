@@ -1,0 +1,4 @@
+<config>
+	<option name="nick" value="Feesh!" />
+	<option name="server" value="localhost" />
+</config>

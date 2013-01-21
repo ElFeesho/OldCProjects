@@ -1,0 +1,71 @@
+Nonlogic Pad Server Design - 02/Nov/2007
+
+New NLPad server will be a sizeable improvement over the current (read: old) server.
+
+The current server was a brutal fork of a telnet chat server. This shows a lot. The client's protocol is pretty basic and provides the amount of flexibility that will ever be needed. The server handles operations in a poor way, and general handling of data is pretty poor.
+
+The new version of the server will include a lot of nice updates and new features. To list a few:
+
+	Topic Bar for channels
+	Operators
+	Voice
+	Ink (think voice but with ink)
+	Channel securing (via passwords)
+	'root' channel
+	
+A lot of improvements on how the whole server will work will increase the stability, hopefully erradicating errors such as clients not turning up in the client list, and segfaults on unsanitised data.
+
+Root Channel
+
+The root channel will be a channel that will be used as a last resort. If for some reason a user is forced out of a channel, or can't access a channel, the user will be pointed to 'root'.
+
+No one can draw or talk in the root channel.
+
+Data Flow
+
+Login:
+
+	Client will send off nickname, and desired channel (along with any other meta data)
+	
+	Server will check that the nick isn't in use, and will create the channel if it doesn't exist
+		If the nick is in use, it will attempt to add a _, to the end of the desired nick, and will try again if the nick is still in use.
+		If the channel exists, but it is locked out, the client will be bounced into the 'root' channel
+		
+	Once the server has got a nickname, and channel, it will then send them back to the client, which will accept the data and act accordingly (changing local nickname and changing local channel)
+	
+	Client will send a final 'Ok' which will then activate the client, and will register it as connected on the server.
+	
+Data Structures:
+
+Client Structure
+
+	int id - Stores the client's unique socket number
+	id logged_in - Whether the client is logged in or not (0 by default, 1 after ok from client)
+	int status - Stores binary data on what state the client is in (away, busy, etc)
+	int attribs - Stores binary data on whether the client has Ink, Voice, Ops
+	ChannelT currentChannel - stores a pointer to the current channel the client is in
+	char nick[17] - Stores the client's nick name
+	char name[33] - Stores the client's real name
+	char website[33] - Stores the client's website
+	char email[33] - Stores the client's email address
+	
+Channel Structure
+
+	int id - Stores the channel's unique identification number
+	char name[33] - Stores the name of the channel
+	char topic[129] - Stores the channels topic
+	int attribs - Stores whether the channel is locked (only users inside can use it), hidden (doesn't show up on a channel list), topic is locked 
+	vector<ClientT*> - Store a list of clients currently in the room
+	int default_attribs - Stores a bitmask of the default attributes clients get in the room.
+	char pass[33] - Stores the channel's password - Used for checking whether ops can be granted
+	
+Program Layout
+
+Globals: 
+
+	Channel list
+	Client List
+	
+Client list double's as a list of open sockets also.
+
+	

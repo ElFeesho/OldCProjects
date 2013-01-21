@@ -1,0 +1,39 @@
+NLDT UDP TP
+
+In order to produce a nice quick and responive server and client, NLDT will use UDP as it's networking protocol. 
+This will then have NLDTUDPTP layered on top of it, to produce a reliable protocol, with data checking.
+
+TCP would potentially slow down the program (perhaps a lot), so UDP with a custom protocol on top should be faster,
+definitely for low priority streams such as webcam and voip.
+
+Potential NLDTTP Header
+
+struct nldtttp_header_t
+{
+	uint8 type;				//Type of packet
+	uint8 priority;		//Level of priority, determines whether packet needs to arrive or not
+	uint16 packet_num;	//Packet's number, as packets may arrive in mixed orders!
+	uint16 packet_total; //Total amounts of packets being sent.
+	uint8 client_id;		//Which client has sent the data (0 if logging in)
+	uint8 client_rec;		//Client receiving this packet, (IF 0 EVERYONE!)
+	uint16 size;			//SIZE OF THE CURRENT PACKET NOT ALL OF THEM IN TOTAL!
+}
+
+10 bytes for a header isn't too bad.
+
+The only problem, is coming up with a set way of producing a packet type; that is, how do we make sure that one applet
+developer won't step on another applet developers toes and steal their applet id which will be used as the type.
+
+Ideally, it would be nice to make sure that applets have unique IDs that are not assigned by the developer, but the
+program some how.
+
+Transmission will be pretty simple, and the possibility of receiving packets in a different order is eliminated.
+
+Client sends data -> Server acknowledged data reception -> Client sends new packet
+
+If server doesn't acknowledge new packet, client will send it again after a few seconds.
+
+Client sends data -> BRICKWALL -> 2s econds pass -> CLient sends data -> BRICKWALL -> Client sends data ...
+
+Acknowledgement from the server will be needed on packets with a priority of 1, if the packets do not arrive, and
+the header had a priority of 0 it will be dismissed.

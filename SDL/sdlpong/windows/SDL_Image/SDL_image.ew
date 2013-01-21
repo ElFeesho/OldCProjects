@@ -1,0 +1,186 @@
+-- SDL_image.ew
+-- A simple library to load images of various formats as SDL surfaces --
+-- Euphoria header file for SDL_image
+-- Written by Mark K. Akita     3/31/03
+
+--without type_check
+--without warning
+--without profile
+
+include dll.e
+include machine.e
+
+global atom image,sdl
+image = open_dll("SDL_image.dll")
+sdl = open_dll("SDL.dll")
+
+-- Load an image from an SDL data source.
+--   The 'type' may be one of: "BMP", "GIF", "PNG", etc.
+
+--   If the image format supports a transparent pixel, SDL will set the
+--   colorkey for the surface.  You can enable RLE acceleration on the
+--   surface afterwards by calling:
+--	SDL_SetColorKey(image, SDL_RLEACCEL, image->format->colorkey);
+
+constant
+xIMG_RWFromFile=define_c_func(sdl,"SDL_RWFromFile",{C_POINTER,C_POINTER},C_POINTER),
+xIMG_LoadTyped_RW=define_c_func(sdl,"IMG_LoadTyped_RW",{C_POINTER,C_INT,C_POINTER},C_POINTER),
+xIMG_Load=define_c_func(image,"IMG_Load",{C_POINTER},C_POINTER),
+xIMG_Load_RW=define_c_func(image,"IMG_Load_RW",{C_POINTER,C_INT},C_POINTER),
+xIMG_InvertAlpha=define_c_func(image,"IMG_InvertAlpha",{C_INT},C_INT),
+xIMG_isBMP=define_c_func(image,"IMG_isBMP",{C_POINTER},C_INT),
+xIMG_isPNM=define_c_func(image,"IMG_isPNM",{C_POINTER},C_INT),
+xIMG_isXPM=define_c_func(image,"IMG_isXPM",{C_POINTER},C_INT),
+xIMG_isXCF=define_c_func(image,"IMG_isXCF",{C_POINTER},C_INT),
+xIMG_isPCX=define_c_func(image,"IMG_isPCX",{C_POINTER},C_INT),
+xIMG_isGIF=define_c_func(image,"IMG_isGIF",{C_POINTER},C_INT),
+xIMG_isJPG=define_c_func(image,"IMG_isJPG",{C_POINTER},C_INT),
+xIMG_isTIF=define_c_func(image,"IMG_isTIF",{C_POINTER},C_INT),
+xIMG_isPNG=define_c_func(image,"IMG_isPNG",{C_POINTER},C_INT),
+xIMG_isLBM=define_c_func(image,"IMG_isLBM",{C_POINTER},C_INT),
+xIMG_LoadBMP_RW=define_c_func(image,"IMG_LoadBMP_RW",{C_POINTER},C_POINTER),
+xIMG_LoadPNM_RW=define_c_func(image,"IMG_LoadPNM_RW",{C_POINTER},C_POINTER),
+xIMG_LoadXPM_RW=define_c_func(image,"IMG_LoadXPM_RW",{C_POINTER},C_POINTER),
+xIMG_LoadXCF_RW=define_c_func(image,"IMG_LoadXCF_RW",{C_POINTER},C_POINTER),
+xIMG_LoadPCX_RW=define_c_func(image,"IMG_LoadPCX_RW",{C_POINTER},C_POINTER),
+xIMG_LoadGIF_RW=define_c_func(image,"IMG_LoadGIF_RW",{C_POINTER},C_POINTER),
+xIMG_LoadJPG_RW=define_c_func(image,"IMG_LoadJPG_RW",{C_POINTER},C_POINTER),
+xIMG_LoadTIF_RW=define_c_func(image,"IMG_LoadTIF_RW",{C_POINTER},C_POINTER),
+xIMG_LoadPNG_RW=define_c_func(image,"IMG_LoadPNG_RW",{C_POINTER},C_POINTER),
+xIMG_LoadLBM_RW=define_c_func(image,"IMG_LoadLBM_RW",{C_POINTER},C_POINTER),
+xIMG_ReadXPMFromArray=define_c_func(image,"IMG_ReadXPMFromArray",{C_POINTER},C_POINTER),
+xIMG_SetError=define_c_proc(sdl,"SDL_SetError",{C_POINTER,C_INT}),
+xIMG_GetError=define_c_func(sdl,"SDL_GetError",{},C_POINTER)
+
+global function IMG_RWFromFile(sequence fname, sequence x)
+    atom f_adr,x_adr 
+    atom ret
+    f_adr = allocate_string(fname)
+    x_adr = allocate_string(x)
+    ret= c_func(xIMG_RWFromFile,{f_adr,x_adr})
+    free(f_adr)
+    free(x_adr)
+    return ret
+end function
+
+global function IMG_LoadTyped_RW(atom src, integer freesrc, atom typez)
+    return c_func(xIMG_LoadTyped_RW,{src,freesrc,typez})
+end function
+
+global function IMG_Load(sequence file)
+    atom f_adr 
+    atom ret
+    f_adr = allocate_string(file)
+    ret= c_func(xIMG_Load,{f_adr})
+    free(f_adr)
+    return ret
+end function  
+
+global function IMG_Load_RW(sequence src,atom freesrc)
+    return c_func(xIMG_Load_RW,{src,freesrc})
+end function
+
+global function IMG_InvertAlpha(integer on)
+    return c_func(xIMG_InvertAlpha,{on})
+end function
+
+global function IMG_isBMP(sequence src)
+    return c_func(xIMG_isBMP,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_isPNM(sequence src)
+    return c_func(xIMG_isPNM,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_isXPM(sequence src)
+    return c_func(xIMG_isXPM,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_isXCF(sequence src)
+    return c_func(xIMG_isXCF,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_isPCX(sequence src)
+    return c_func(xIMG_isPCX,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_isGIF(sequence src)
+    return c_func(xIMG_isGIF,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_isJPG(sequence src)
+    return c_func(xIMG_isJPG,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_isTIF(sequence src)
+    return c_func(xIMG_isTIF,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_isPNG(sequence src)
+    return c_func(xIMG_isPNG,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_isLBM(sequence src)
+    return c_func(xIMG_isLBM,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_LoadBMP(sequence src)
+    return c_func(xIMG_LoadBMP_RW,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_LoadPNM(sequence src)
+    return c_func(xIMG_LoadPNM_RW,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_LoadXPM(sequence src)
+    return c_func(xIMG_LoadXPM_RW,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_LoadXCF(sequence src)
+    return c_func(xIMG_LoadXCF_RW,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_LoadPCX(sequence src)
+    return c_func(xIMG_LoadPCX_RW,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_LoadGIF(sequence src)
+    return c_func(xIMG_LoadGIF_RW,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_LoadJPG(sequence src)
+    return c_func(xIMG_LoadJPG_RW,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_LoadTIF(sequence src)
+    return c_func(xIMG_LoadTIF_RW,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_LoadPNG(sequence src)
+    return c_func(xIMG_LoadPNG_RW,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_LoadLBM(sequence src)
+    return c_func(xIMG_LoadLBM_RW,{IMG_RWFromFile(src,"rb")})
+end function
+
+global function IMG_ReadXPMFromArray(atom xpm)
+    return c_func(xIMG_ReadXPMFromArray,{xpm})
+end function
+
+global procedure IMG_SetError(sequence fmt, integer err)
+    atom f_adr 
+    f_adr = allocate_string(fmt)
+    c_proc(xIMG_SetError,{f_adr,err})
+    free(f_adr)
+end procedure
+
+global function IMG_GetError()
+    return c_func(xIMG_GetError,{})
+end function
+
+
+
+
+
+
