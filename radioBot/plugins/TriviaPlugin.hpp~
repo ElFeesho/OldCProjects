@@ -1,0 +1,20 @@
+#ifndef __TRIVIA_PLUGIN_HPP__
+#define __TRIVIA_PLUGIN_HPP__
+
+#include "plugin.hpp"
+
+class TriviaPlugin : public Plugin
+{
+	public:
+		TriviaPlugin();
+		~TriviaPlugin();
+		
+		void handle_msg(const string &sender, const string &channel, const string &msg);
+		void handle_privmsg(const string &sender, const string &msg);
+		void update();
+		
+		void plugin_loaded();
+		void plugin_unloaded();
+};
+
+#endif
