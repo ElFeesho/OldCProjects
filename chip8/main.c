@@ -9,6 +9,7 @@ int main(int argc, char ** argv)
 		fprintf(stderr, "Usage:\n\t%s [GAME_FILE]\n\n",argv[0]);
 		return 1;
 	}
+	
 	if(load_game(argv[1]))
 	{
 		fprintf(stderr, "Couldn't load %s\n",argv[1]);
@@ -19,8 +20,8 @@ int main(int argc, char ** argv)
 	int quit = 0;
 	while(parse_op() && !quit)
 	{
-		SDL_Delay(1000/60);
-		SDL_Event ev;
+		SDL_Delay(1000/10);
+		SDL_Event ev = { 0 };
 		while(SDL_PollEvent(&ev))
 		{
 				if(ev.type == SDL_QUIT)
@@ -29,6 +30,7 @@ int main(int argc, char ** argv)
 				}
 		}
 		SDL_Flip(SDL_GetVideoSurface());
+
 	}
 	
 	return 0;

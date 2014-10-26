@@ -141,13 +141,11 @@ void op_8XXX(short opperand)
 			regs[15] = 0;
 		regs[lhs] -= regs[rhs];
 	}
-	else if(subOp ==6)
+	else if(subOp == 6)
 	{
-		if((regs[lhs]&0x01) == 1)
-			regs[15] = 1;
-		else
-			regs[15] = 0;
-		regs[lhs] /= 2;
+		regs[15] = regs[lhs]&0x01;
+		
+		regs[lhs] = regs[rhs] >> 1;
 	}
 	else if(subOp == 7)
 	{
@@ -159,11 +157,10 @@ void op_8XXX(short opperand)
 	}
 	else if(subOp == 0xE)
 	{
-		if((regs[lhs]&0x01) == 1)
-			regs[15] = 1;
-		else
-			regs[15] = 0;
-		regs[lhs] *= 2;
+
+		regs[15] = (regs[lhs]&0x80) >> 7;
+		
+		regs[lhs] = regs[rhs] << 1;
 	}
 }
 
@@ -253,7 +250,7 @@ void op_FXXX(short opperand)
 	{
 		unsigned char *start = memory+I;
 		int i = 0;
-		for(;i<(opperand&0x0f00)>>8;i++)
+		for(;i<=(opperand&0x0f00)>>8;i++)
 			*(start+i) = regs[i];
 
 		I += ((opperand&0x0f00)>>8) + 1;
@@ -262,7 +259,7 @@ void op_FXXX(short opperand)
 	{
 		unsigned char *start = memory+I;
 		int i = 0;
-		for(;i<(opperand&0x0f00)>>8;i++)
+		for(;i<=(opperand&0x0f00)>>8;i++)
 			regs[i] = *(start+i);
 	
 		I += ((opperand&0x0f00)>>8) + 1;

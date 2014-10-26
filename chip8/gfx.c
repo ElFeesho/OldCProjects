@@ -41,7 +41,7 @@ int gfx_draw(int x, int y, unsigned char *mem, int count)
 
 	for(j = 0; j < count; j++)
 	{
-		unsigned char byte = mem[8*j];
+		unsigned char byte = mem[j];
 		printf("'");
 		for(i = 0; i < 8; i++)
 		{
