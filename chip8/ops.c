@@ -3,16 +3,69 @@
 #include <stdlib.h>
 #include "gfx.h"
 
-unsigned char memory[4096] = { 0 };
-int I = 0;
-unsigned char regs[16] = { 0 };
-unsigned char keys[16] = { 0 };
-static unsigned short PC = 0;
-static unsigned short stack[16] = { 0 };
-static unsigned char SP = 0;
+
+static const int 		PROGRAM_START_OFFSET = 0x200;
+
+static unsigned char 	memory[4096] = { 0 };
+static int 				I = 0;
+static unsigned char 	regs[16] = { 0 };
+static unsigned char 	keys[16] = { 0 };
+static unsigned short 	PC = 0;
+static unsigned short 	stack[16] = { 0 };
+static unsigned char 	SP = 0;
 
 static unsigned char DT = 0;
 static unsigned char ST = 0;
+
+
+typedef void (*op_handler)(int);
+
+void op_00XX(int opperand)
+{
+	int op = opperand & 0xff;
+	if(op == 0xE0)
+	{
+		gfx_cls();
+	}
+	else if(op == 0xEE)
+	{
+		PC = stack[--SP];
+	}
+}
+
+void op_1XXX(int opperand)
+{
+	PC = opperand-1;
+}
+
+void op_2XXX(int opperand)
+{
+	if(SP<16)
+	{
+		stack[SP] = PC;
+		PC = opperand-1;
+		SP++;
+	}
+	else
+	{
+		printf("Attempted to jump 16 times\n");
+	}
+}
+
+void op_3XXX(int opperand)
+{
+	if(regs[(opperand & 0x0f00) >> 8] == (opperand & 0x000f))
+	{
+		PC++;
+	}
+}
+
+op_handler opHandlerTable[] = {
+	&op_00XX,
+	&op_1XXX,
+	&op_2XXX,
+	&op_3XXX
+};
 
 static int ops_get_pc()
 {
@@ -47,16 +100,17 @@ static init_memory()
 
 int load_game(char *fname)
 {
-	// Read the chip8 program into memory
-	// at 0x200
-	
 	FILE *game = fopen(fname, "rb");
 	if(!game)
+	{
 		return -1;
+	}
+
 	size_t bytes_read = 0;
+
 	while(!feof(game))
 	{
-		bytes_read += fread(memory+bytes_read+0x200, 1,1024, game);
+		bytes_read += fread(memory + bytes_read + PROGRAM_START_OFFSET, 1, 1024, game);
 	}
 	
 	printf("Read: %u bytes\n", (unsigned int)bytes_read);
@@ -77,35 +131,17 @@ int parse_op()
 	unsigned short op = (opbytes[1])+(opbytes[0]<<8);
 #endif
 
-	printf("PC: %04d SP: %02d PARSING: %02X%02X - %02x %03x REGS: %X %X %X %X %X %X %X %X %X %X %X %X %X %X %X %X\n",PC,SP, (op&0xff00)>>8, op&0xff, (op&0xf000)>>12, op&0x0fff, regs[0], regs[1], regs[2], regs[3], regs[4], regs[5], regs[6], regs[7], regs[8], regs[9], regs[10], regs[11], regs[12], regs[13], regs[14], regs[15]);
+	//printf("PC: %04d SP: %02d PARSING: %02X%02X - %02x %03x REGS: %X %X %X %X %X %X %X %X %X %X %X %X %X %X %X %X\n",PC,SP, (op&0xff00)>>8, op&0xff, (op&0xf000)>>12, op&0x0fff, regs[0], regs[1], regs[2], regs[3], regs[4], regs[5], regs[6], regs[7], regs[8], regs[9], regs[10], regs[11], regs[12], regs[13], regs[14], regs[15]);
 	fflush(stdout);
-	switch((op&0xf000)>>12)
+	int operation = (op & 0xf000) >> 12;
+
+	switch(operation)
 	{
 		case 0: 
-			if((op&0xff)==0xE0)
-				gfx_cls();
-			else if((op&0xff)==0xEE)
-				PC = stack[--SP];
-			break;
 		case 1:
-			PC = (op & 0x0fff)-1;
-			break;
 		case 2:
-			if(SP<16)
-			{
-				stack[SP] = PC;
-				PC = (op & 0x0fff)-1;
-				SP++;
-			}
-			else
-			{
-				printf("Attempted to jump 16 times\n");
-				return 0;
-			}
-			break;
 		case 3:
-			if(regs[(op&0x0f00)>>8] == (op & 0x00ff))
-				PC++;
+			opHandlerTable[operation](op&0x0fff);
 			break;
 		case 4:
 			if(regs[(op&0x0f00)>>8] != (op & 0x00ff))
