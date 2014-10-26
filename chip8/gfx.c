@@ -18,7 +18,7 @@ void gfx_cls()
 void gfx_draw(int x, int y, unsigned char *mem, int count)
 {
 	if(count == 0)
-		count == 16;
+		count = 16;
 	
 	
 	printf("DRAWING %dx%d %p %d\n",x, y, mem, count);
