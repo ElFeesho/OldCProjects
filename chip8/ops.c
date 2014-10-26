@@ -18,9 +18,9 @@ static unsigned char DT = 0;
 static unsigned char ST = 0;
 
 
-typedef void (*op_handler)(int);
+typedef void (*op_handler)(short);
 
-void op_00XX(int opperand)
+void op_00XX(short opperand)
 {
 	int op = opperand & 0xff;
 	if(op == 0xE0)
@@ -36,7 +36,7 @@ void op_00XX(int opperand)
 /*
  Jump to address 
 */
-void op_1XXX(int opperand)
+void op_1XXX(short opperand)
 {
 	PC = opperand;
 }
@@ -44,19 +44,19 @@ void op_1XXX(int opperand)
 /*
  Jump to address + v0
 */
-void op_BXXX(int opperand)
+void op_BXXX(short opperand)
 {
 	PC = regs[0] + (opperand&0x0fff);
 }
 
-void op_CXXX(int operand)
+void op_CXXX(short operand)
 {
 	int targetRegister = (operand&0xf00)>>8;
 	int mask = operand & 0xff;
 	regs[targetRegister] = (rand() % 256) & mask;
 }
 
-void op_2XXX(int opperand)
+void op_2XXX(short opperand)
 {
 	if(SP<16)
 	{
@@ -70,7 +70,7 @@ void op_2XXX(int opperand)
 	}
 }
 
-void op_3XXX(int opperand)
+void op_3XXX(short opperand)
 {
 	if(regs[(opperand & 0x0f00) >> 8] == (opperand & 0x000f))
 	{
@@ -78,7 +78,7 @@ void op_3XXX(int opperand)
 	}
 }
 
-void op_4XXX(int opperand)
+void op_4XXX(short opperand)
 {
 	if(regs[(opperand&0x0f00)>>8] != (opperand & 0x00ff))
 	{
@@ -86,7 +86,7 @@ void op_4XXX(int opperand)
 	}
 }
 
-void op_5XXX(int opperand)
+void op_5XXX(short opperand)
 {
 	if(regs[(opperand&0x0f00)>>8] == regs[(opperand&0x00f0)>>4])
 	{
@@ -94,17 +94,17 @@ void op_5XXX(int opperand)
 	}
 }
 
-void op_6XXX(int opperand)
+void op_6XXX(short opperand)
 {
 	regs[(opperand&0x0f00)>>8] = (opperand&0x00ff);
 }
 
-void op_7XXX(int opperand)
+void op_7XXX(short opperand)
 {
 	regs[(opperand&0x0f00)>>8] += (opperand&0x00ff);
 }
 
-void op_8XXX(int opperand)
+void op_8XXX(short opperand)
 {
 	int subOp = opperand & 0x0f;
 	int lhs = (opperand & 0x0f00)>>8;
@@ -167,7 +167,7 @@ void op_8XXX(int opperand)
 	}
 }
 
-void op_9XXX(int opperand)
+void op_9XXX(short opperand)
 {
 	if(regs[(opperand&0x0f00)>>8] != regs[(opperand&0x00f0)>>4])
 	{
@@ -175,17 +175,20 @@ void op_9XXX(int opperand)
 	}
 }
 
-void op_AXXX(int opperand)
+void op_AXXX(short opperand)
 {
 	I = opperand & 0x0fff;
 }
 
-void op_DXXX(int opperand)
+void op_DXXX(short opperand)
 {
-	gfx_draw( regs[(opperand&0xf00)>>8], regs[(opperand&0x00f0)>>4],memory+I, opperand & 0x0f);			
+	int x = regs[(opperand & 0xf00) >> 8];
+	int y = regs[(opperand & 0x00f0) >> 4];
+	int count = opperand & 0x0f;
+	regs[15] = gfx_draw(x, y, memory+I, count);			
 }
 
-void op_EXXX(int opperand)
+void op_EXXX(short opperand)
 {
 	if((opperand&0xff)==0x9E)
 	{
@@ -203,7 +206,7 @@ void op_EXXX(int opperand)
 	}
 }
 
-void op_FXXX(int opperand)
+void op_FXXX(short opperand)
 {
 	if((opperand&0xff)==0x07)
 	{
@@ -248,17 +251,21 @@ void op_FXXX(int opperand)
 	}
 	else if((opperand&0xff)==0x55)
 	{
-		unsigned char *start = memory+0x200+I;
-		int i =0;
+		unsigned char *start = memory+I;
+		int i = 0;
 		for(;i<(opperand&0x0f00)>>8;i++)
 			*(start+i) = regs[i];
+
+		I += ((opperand&0x0f00)>>8) + 1;
 	}
 	else if((opperand&0xff)==0x65)
 	{
-		unsigned char *start = memory+0x200+I;
-		int i =0;
+		unsigned char *start = memory+I;
+		int i = 0;
 		for(;i<(opperand&0x0f00)>>8;i++)
 			regs[i] = *(start+i);
+	
+		I += ((opperand&0x0f00)>>8) + 1;
 	}
 }
 
@@ -290,26 +297,24 @@ static init_memory()
 {
 	unsigned char font[] = 
 	{
-		0xF0, 0x90, 0x90, 0x90, 0xF0,
-		0x20, 0x60, 0x20, 0x20, 0x70,
-		0xF0, 0x10, 0xF0, 0x80, 0xF0,
-		0xF0, 0x10, 0xF0, 0x10, 0xF0,
-		0x90, 0x90, 0xF0, 0x10, 0x10,
-		0xF0, 0x80, 0xF0, 0x10, 0xF0,
-		0x90, 0x90, 0xF0, 0x10, 0x10, 
-		0xF0, 0x80, 0xF0, 0x10, 0xF0,
-		0xF0, 0x80, 0xF0, 0x90, 0xF0,
-		0xF0, 0x10, 0x20, 0x40, 0x40,
-		0xF0, 0x90, 0xF0, 0x90, 0xF0,
-		0xF0, 0x90, 0xF0, 0x10, 0xF0, 
-		0xF0, 0x90, 0xF0, 0x90, 0x90,
-		0xE0, 0x90, 0xE0, 0x90, 0xE0,
-		0xF0, 0x80, 0x80, 0x80, 0xF0,
-		0xE0, 0x90, 0x90, 0x90, 0xE0,
-		0xF0, 0x80, 0xF0, 0x80, 0xF0,
-		0xF0, 0x80, 0xF0, 0x80, 0x80 
+		0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
+		0x20, 0x60, 0x20, 0x20, 0x70, // 1
+		0xF0, 0x10, 0xF0, 0x80, 0xF0, // 2
+		0xF0, 0x10, 0xF0, 0x10, 0xF0, // 3
+		0x90, 0x90, 0xF0, 0x10, 0x10, // 4
+		0xF0, 0x80, 0xF0, 0x10, 0xF0, // 5
+		0xF0, 0x80, 0xF0, 0x90, 0xF0, // 6
+		0xF0, 0x10, 0x20, 0x40, 0x40, // 7
+		0xF0, 0x90, 0xF0, 0x90, 0xF0, // 8
+		0xF0, 0x90, 0xF0, 0x10, 0xF0, // 9
+		0xF0, 0x90, 0xF0, 0x90, 0x90, // A
+		0xE0, 0x90, 0xE0, 0x90, 0xE0, // B
+		0xF0, 0x80, 0x80, 0x80, 0xF0, // C
+		0xE0, 0x90, 0x90, 0x90, 0xE0, // D
+		0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
+		0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 	};
-	memcpy(font, memory, 80);
+	memcpy(memory, font, 80);
 }
 
 int load_game(char *fname)
