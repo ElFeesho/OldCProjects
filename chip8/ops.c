@@ -10,7 +10,7 @@ static unsigned char 	memory[4096] = { 0 };
 static int 				I = 0;
 static unsigned char 	regs[16] = { 0 };
 static unsigned char 	keys[16] = { 0 };
-static unsigned short 	PC = 0;
+static unsigned short 	PC = 0x200;
 static unsigned short 	stack[16] = { 0 };
 static unsigned char 	SP = 0;
 
@@ -38,7 +38,7 @@ void op_00XX(int opperand)
 */
 void op_1XXX(int opperand)
 {
-	PC = opperand-1;
+	PC = opperand;
 }
 
 /*
@@ -46,7 +46,7 @@ void op_1XXX(int opperand)
 */
 void op_BXXX(int opperand)
 {
-	PC = regs[0] + (opperand&0x0fff)-1;
+	PC = regs[0] + (opperand&0x0fff);
 }
 
 void op_CXXX(int operand)
@@ -61,7 +61,7 @@ void op_2XXX(int opperand)
 	if(SP<16)
 	{
 		stack[SP] = PC;
-		PC = opperand-1;
+		PC = opperand;
 		SP++;
 	}
 	else
@@ -74,7 +74,7 @@ void op_3XXX(int opperand)
 {
 	if(regs[(opperand & 0x0f00) >> 8] == (opperand & 0x000f))
 	{
-		PC++;
+		PC += 2;
 	}
 }
 
@@ -82,7 +82,7 @@ void op_4XXX(int opperand)
 {
 	if(regs[(opperand&0x0f00)>>8] != (opperand & 0x00ff))
 	{
-		PC++;
+		PC += 2;
 	}
 }
 
@@ -90,7 +90,7 @@ void op_5XXX(int opperand)
 {
 	if(regs[(opperand&0x0f00)>>8] == regs[(opperand&0x00f0)>>4])
 	{
-		PC++;
+		PC += 2;
 	}
 }
 
@@ -171,7 +171,7 @@ void op_9XXX(int opperand)
 {
 	if(regs[(opperand&0x0f00)>>8] != regs[(opperand&0x00f0)>>4])
 	{
-		PC++;
+		PC += 2;
 	}
 }
 
@@ -191,14 +191,14 @@ void op_EXXX(int opperand)
 	{
 		if(keys[regs[(opperand&0x0f00)>>8]]>0)
 		{
-			PC++;
+			PC += 2;
 		}
 	}
 	else if((opperand&0xff)==0xA1) // No need to check but still..
 	{
 		if(keys[regs[(opperand&0x0f00)>>8]]==0)
 		{
-			PC++;
+			PC += 2;
 		}
 	}
 }
@@ -309,7 +309,7 @@ static init_memory()
 		0xF0, 0x80, 0xF0, 0x80, 0xF0,
 		0xF0, 0x80, 0xF0, 0x80, 0x80 
 	};
-	memcpy(font, memory,80);
+	memcpy(font, memory, 80);
 }
 
 int load_game(char *fname)
@@ -329,34 +329,45 @@ int load_game(char *fname)
 	
 	printf("Read: %u bytes\n", (unsigned int)bytes_read);
 	
+	int i = 0; 
+	for(i = 0; i < bytes_read; i++)
+	{
+		printf("%02x ", memory[PROGRAM_START_OFFSET + i]);
+	}
+	printf("\n");
 	fclose(game);
 	
-	PC = 0;
+	PC = 0x200;
 	init_memory();
 	return 0;
 }
 
+unsigned short get_op()
+{
+	unsigned char opL = *((unsigned char*)memory+(PC));
+	unsigned char opR = *((unsigned char*)memory+(PC+1));
+	PC += 2;
+	return ((short)opL<<8) + opR;
+}
+
 int parse_op()
 {
-	unsigned char *opbytes = ((unsigned char*)memory+0x200+PC+2);
-#ifndef FLIP
-	unsigned short op = (opbytes[0])+(opbytes[1]<<8);
-#else
-	unsigned short op = (opbytes[1])+(opbytes[0]<<8);
-#endif
-
-	printf("PC: %04d SP: %02d PARSING: %02X%02X - %02x %03x REGS: %X %X %X %X %X %X %X %X %X %X %X %X %X %X %X %X\n",PC,SP, (op&0xff00)>>8, op&0xff, (op&0xf000)>>12, op&0x0fff, regs[0], regs[1], regs[2], regs[3], regs[4], regs[5], regs[6], regs[7], regs[8], regs[9], regs[10], regs[11], regs[12], regs[13], regs[14], regs[15]);
+	unsigned short op = get_op();
+	
+	printf("PC: %04X SP: %02d I: %X PARSING: %02X%02X - %02x %03x REGS: %X %X %X %X %X %X %X %X %X %X %X %X %X %X %X %X\n",PC,SP, I, (op&0xff00)>>8, op&0xff, (op&0xf000)>>12, op&0x0fff, regs[0], regs[1], regs[2], regs[3], regs[4], regs[5], regs[6], regs[7], regs[8], regs[9], regs[10], regs[11], regs[12], regs[13], regs[14], regs[15]);
 	fflush(stdout);
 
 	int operation = (op & 0xf000) >> 12;
 	
 	opHandlerTable[operation](op&0x0fff);			
-		
-	PC++;
+	
+
 	if(DT>0)
 		DT--;
+	
 	if(ST>0)
 		ST--;
+
 	return 1;
 }
 
