@@ -23,30 +23,19 @@ void gfx_cls()
 
 int gfx_get_pixel(int x, int y)
 {
-	return ((unsigned char*)screen->pixels)[(y * screen->pitch + x * screen->format->BytesPerPixel) + 1];
+	return ((unsigned char*)screen->pixels)[(y * screen->pitch + x * screen->format->BytesPerPixel)];
 }
 
 int gfx_draw_pixel_on(int x, int y)
 {
 	int colour = 0xffffffff;
-	if(gfx_get_pixel(x, y))
+	if(gfx_get_pixel(x*10, y*10))
 	{
 		colour = 0xff000000;
 	}
 	SDL_Rect pos = { .x = x*10, .y = y*10, .w = 10, .h = 10 };
 	SDL_FillRect(screen, &pos, colour);
-	return colour == 0xffffffff;
-}
-
-int gfx_draw_pixel_off(int x, int y)
-{
-	int colour = 0xff000000;
-	int drawn = 0;
-
-	SDL_Rect pos = { .x = x*10, .y = y*10, .w = 10, .h = 10 };
-	SDL_FillRect(screen, &pos, colour);
-
-	return drawn;
+	return colour != 0xffffffff;
 }
 
 int gfx_draw(int x, int y, unsigned char *mem, int count)
@@ -64,10 +53,6 @@ int gfx_draw(int x, int y, unsigned char *mem, int count)
 			if(pixelOn)
 			{
 				shouldFlip |= gfx_draw_pixel_on(x+i, y + j);
-			}
-			else
-			{
-				shouldFlip |= gfx_draw_pixel_off(x+i, y + j);
 			}
 		}
 	}

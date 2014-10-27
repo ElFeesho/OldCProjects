@@ -182,7 +182,7 @@ void op_DXXX(short opperand)
 	int x = regs[(opperand & 0xf00) >> 8];
 	int y = regs[(opperand & 0x00f0) >> 4];
 	int count = opperand & 0x0f;
-	regs[15] = gfx_draw(x, y, memory+I, count);
+	regs[15] = gfx_draw(x, y, memory+I, count)?1:0;
 }
 
 void op_EXXX(short opperand)

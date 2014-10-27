@@ -23,7 +23,6 @@ int main(int argc, char ** argv)
 	int quit = 0;
 	while(parse_op() && !quit)
 	{
-		SDL_Delay(1000/60);
 		SDL_Event ev = { 0 };
 		while(SDL_PollEvent(&ev))
 		{
@@ -33,7 +32,6 @@ int main(int argc, char ** argv)
 				}
 		}
 		SDL_Flip(SDL_GetVideoSurface());
-
 	}
 
 	return 0;
