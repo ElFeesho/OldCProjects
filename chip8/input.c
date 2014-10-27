@@ -39,6 +39,10 @@ int input_readkey()
 				}
 			}
 		}
+		else if(ev.type == SDL_QUIT)
+		{
+			exit(-1);
+		}
 	}
 }
 

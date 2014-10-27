@@ -216,6 +216,7 @@ void op_FXXX(short opperand)
 	else if((opperand&0xff)==0x0A)
 	{
 		int key = (opperand & 0x0f00) >> 8;
+		SDL_Flip(SDL_GetVideoSurface());
 		regs[key] = input_readkey();
 	}
 	else if((opperand&0xff)==0x15)

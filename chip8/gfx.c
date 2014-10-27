@@ -47,7 +47,7 @@ int gfx_draw(int x, int y, unsigned char *mem, int count)
 	for(int j = 0; j < count; j++)
 	{
 		unsigned char byte = mem[j];
-		for(int i = 0; i < 8; i++)
+		for(int i = 1; i <= 8; i++)
 		{
 			int pixelOn = byte & (1 << (8-i));
 			if(pixelOn)

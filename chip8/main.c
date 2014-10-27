@@ -8,14 +8,19 @@ extern int load_game(char *filename);
 extern int parse_op();
 extern void decrement_timers();
 
-static int NUM_OPS = 11;
+static int NUM_OPS = 7;
 
 int main(int argc, char ** argv)
 {
-	if(argc!=2)
+	if(argc != 2 && argc != 3)
 	{
-		fprintf(stderr, "Usage:\n\t%s [GAME_FILE]\n\n",argv[0]);
+		fprintf(stderr, "Usage:\n\t%s <GAME_FILE> [CYCLES]\n\n",argv[0]);
 		return 1;
+	}
+
+	if(argc == 3)
+	{
+		sscanf(argv[2], "%d", &NUM_OPS);
 	}
 
 	if(load_game(argv[1]))
