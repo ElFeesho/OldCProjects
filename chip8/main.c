@@ -2,6 +2,9 @@
 #include <stdio.h>
 #include "gfx.h"
 
+extern int load_game(char *filename);
+extern int parse_op();
+
 int main(int argc, char ** argv)
 {
 	if(argc!=2)
@@ -9,18 +12,18 @@ int main(int argc, char ** argv)
 		fprintf(stderr, "Usage:\n\t%s [GAME_FILE]\n\n",argv[0]);
 		return 1;
 	}
-	
+
 	if(load_game(argv[1]))
 	{
 		fprintf(stderr, "Couldn't load %s\n",argv[1]);
 		return 1;
 	}
-	
+
 	gfx_init();
 	int quit = 0;
 	while(parse_op() && !quit)
 	{
-		SDL_Delay(1000/10);
+		SDL_Delay(1000/60);
 		SDL_Event ev = { 0 };
 		while(SDL_PollEvent(&ev))
 		{
@@ -32,6 +35,6 @@ int main(int argc, char ** argv)
 		SDL_Flip(SDL_GetVideoSurface());
 
 	}
-	
+
 	return 0;
 }

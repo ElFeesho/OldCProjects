@@ -2,10 +2,16 @@
 
 static SDL_Surface *screen = NULL;
 
+void gfx_init();
+void gfx_cls();
+int gfx_draw_pixel_on();
+int gfx_draw_pixel_off();
+int gfx_draw(int x, int y, unsigned char *mem, int count);
+
 void gfx_init()
 {
 	SDL_Init(SDL_INIT_VIDEO);
-		
+
 	screen = SDL_SetVideoMode(640, 320, 24, SDL_SWSURFACE);
 }
 
@@ -15,58 +21,55 @@ void gfx_cls()
 	SDL_FillRect(screen, NULL, 0);
 }
 
+int gfx_get_pixel(int x, int y)
+{
+	return ((unsigned char*)screen->pixels)[(y * screen->pitch + x * screen->format->BytesPerPixel) + 1];
+}
+
 int gfx_draw_pixel_on(int x, int y)
 {
-	SDL_Rect pos = { x, y, 10, 10 };
-	SDL_FillRect(screen, &pos, 0xffffff);
-	// TODO: Return 1 if pixels are altered
-	return 0;
+	int colour = 0xffffffff;
+	if(gfx_get_pixel(x, y))
+	{
+		colour = 0xff000000;
+	}
+	SDL_Rect pos = { .x = x*10, .y = y*10, .w = 10, .h = 10 };
+	SDL_FillRect(screen, &pos, colour);
+	return colour == 0xffffffff;
 }
 
 int gfx_draw_pixel_off(int x, int y)
 {
-	SDL_Rect pos = { x, y, 10, 10 };
-	SDL_FillRect(screen, &pos, 0xff000000);
-	return 0;
+	int colour = 0xff000000;
+	int drawn = 0;
+
+	SDL_Rect pos = { .x = x*10, .y = y*10, .w = 10, .h = 10 };
+	SDL_FillRect(screen, &pos, colour);
+
+	return drawn;
 }
 
 int gfx_draw(int x, int y, unsigned char *mem, int count)
 {
-	if(count == 0)
-		count = 16;
-	
-	printf("DRAWING %dx%d %p %d\n",x, y, mem, count);
 	int i;
 	int j;
 
+	int shouldFlip = 0;
 	for(j = 0; j < count; j++)
 	{
 		unsigned char byte = mem[j];
-		printf("'");
 		for(i = 0; i < 8; i++)
 		{
-			printf("%c", byte & (1 << (8-i))?'X':' ');
-		}
-		printf("' %X\n", byte);
-	}
-	
-	int shouldFlip = 0;
-
-	for(i=0; i < count; i++, y++)
-	{
-		unsigned char cb = mem[i];
-		for(j = 0;j<8;j++)
-		{
-			if(cb & (1 <<(8 - i)) == 1)
+			int pixelOn = byte & (1 << (8-i));
+			if(pixelOn)
 			{
-				shouldFlip |= gfx_draw_pixel_on(x+j, y);
+				shouldFlip |= gfx_draw_pixel_on(x+i, y + j);
 			}
 			else
 			{
-				shouldFlip |= gfx_draw_pixel_off(x+j, y);
+				shouldFlip |= gfx_draw_pixel_off(x+i, y + j);
 			}
 		}
 	}
-
 	return shouldFlip;
 }

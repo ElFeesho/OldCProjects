@@ -3,6 +3,7 @@
 
 extern void gfx_init();
 
+extern int gfx_draw(int x, int y, unsigned char *mem, int count);
 
 extern void gfx_cls();
 

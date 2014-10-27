@@ -3,7 +3,6 @@
 #include <stdlib.h>
 #include "gfx.h"
 
-
 static const int 		PROGRAM_START_OFFSET = 0x200;
 
 static unsigned char 	memory[4096] = { 0 };
@@ -25,6 +24,7 @@ void op_00XX(short opperand)
 	int op = opperand & 0xff;
 	if(op == 0xE0)
 	{
+		printf("CLEARING SCREEN\n");
 		gfx_cls();
 	}
 	else if(op == 0xEE)
@@ -34,7 +34,7 @@ void op_00XX(short opperand)
 }
 
 /*
- Jump to address 
+ Jump to address
 */
 void op_1XXX(short opperand)
 {
@@ -144,7 +144,7 @@ void op_8XXX(short opperand)
 	else if(subOp == 6)
 	{
 		regs[15] = regs[lhs]&0x01;
-		
+
 		regs[lhs] = regs[rhs] >> 1;
 	}
 	else if(subOp == 7)
@@ -159,7 +159,7 @@ void op_8XXX(short opperand)
 	{
 
 		regs[15] = (regs[lhs]&0x80) >> 7;
-		
+
 		regs[lhs] = regs[rhs] << 1;
 	}
 }
@@ -182,7 +182,7 @@ void op_DXXX(short opperand)
 	int x = regs[(opperand & 0xf00) >> 8];
 	int y = regs[(opperand & 0x00f0) >> 4];
 	int count = opperand & 0x0f;
-	regs[15] = gfx_draw(x, y, memory+I, count);			
+	regs[15] = gfx_draw(x, y, memory+I, count);
 }
 
 void op_EXXX(short opperand)
@@ -222,7 +222,7 @@ void op_FXXX(short opperand)
 				regs[(opperand&0x0f00)>>8] = 1;
 			}
 		}
-		
+
 	}
 	else if((opperand&0xff)==0x15)
 	{
@@ -244,7 +244,18 @@ void op_FXXX(short opperand)
 	else if((opperand&0xff)==0x33)
 	{
 		//BCD...
-		printf("Huhwah?\n");
+		int lhs = (opperand & 0x0f00) >> 8;
+		int target = regs[lhs];
+		int hundreds = target / 100;
+		target -= hundreds * 100;
+		int tens = target / 10;
+		target -= tens * 10;
+		int units = target;
+		memory[I] = (char)hundreds;
+		memory[I+1] = (char)tens;
+		memory[I+2] = (char)units;
+
+		printf("BCD %d to %d %d %d\n", regs[lhs], hundreds, tens, units);
 	}
 	else if((opperand&0xff)==0x55)
 	{
@@ -261,7 +272,7 @@ void op_FXXX(short opperand)
 		int i = 0;
 		for(;i<=(opperand&0x0f00)>>8;i++)
 			regs[i] = *(start+i);
-	
+
 		I += ((opperand&0x0f00)>>8) + 1;
 	}
 }
@@ -290,9 +301,9 @@ static int ops_get_pc()
 	return PC;
 }
 
-static init_memory()
+static void init_memory()
 {
-	unsigned char font[] = 
+	unsigned char font[] =
 	{
 		0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
 		0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -328,17 +339,17 @@ int load_game(char *fname)
 	{
 		bytes_read += fread(memory + bytes_read + PROGRAM_START_OFFSET, 1, 1024, game);
 	}
-	
+
 	printf("Read: %u bytes\n", (unsigned int)bytes_read);
-	
-	int i = 0; 
+
+	int i = 0;
 	for(i = 0; i < bytes_read; i++)
 	{
 		printf("%02x ", memory[PROGRAM_START_OFFSET + i]);
 	}
 	printf("\n");
 	fclose(game);
-	
+
 	PC = 0x200;
 	init_memory();
 	return 0;
@@ -352,21 +363,23 @@ unsigned short get_op()
 	return ((short)opL<<8) + opR;
 }
 
+void print_cpu_state()
+{
+	printf("PC: %04X SP: %02d I: %X REGS: %X %X %X %X %X %X %X %X %X %X %X %X %X %X %X %X\n", PC, SP, I, regs[0], regs[1], regs[2], regs[3], regs[4], regs[5], regs[6], regs[7], regs[8], regs[9], regs[10], regs[11], regs[12], regs[13], regs[14], regs[15]);
+	fflush(stdout);
+}
+
 int parse_op()
 {
 	unsigned short op = get_op();
-	
-	printf("PC: %04X SP: %02d I: %X PARSING: %02X%02X - %02x %03x REGS: %X %X %X %X %X %X %X %X %X %X %X %X %X %X %X %X\n",PC,SP, I, (op&0xff00)>>8, op&0xff, (op&0xf000)>>12, op&0x0fff, regs[0], regs[1], regs[2], regs[3], regs[4], regs[5], regs[6], regs[7], regs[8], regs[9], regs[10], regs[11], regs[12], regs[13], regs[14], regs[15]);
-	fflush(stdout);
 
 	int operation = (op & 0xf000) >> 12;
-	
-	opHandlerTable[operation](op&0x0fff);			
-	
+
+	opHandlerTable[operation](op&0x0fff);
 
 	if(DT>0)
 		DT--;
-	
+
 	if(ST>0)
 		ST--;
 
