@@ -1,6 +1,6 @@
-OBJS=main.o gfx.o ops.o input.o
+OBJS=main.o gfx.o ops.o input.o sound.o
 PROG=chip8
-LIBS=`sdl-config --libs`
+LIBS=`sdl-config --libs` -lm
 CFLAGS=`sdl-config --cflags` -std=c99 -g
 
 all:$(OBJS)

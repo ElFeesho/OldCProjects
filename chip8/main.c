@@ -1,6 +1,7 @@
 #include <SDL/SDL.h>
 #include <stdio.h>
 #include "gfx.h"
+#include "sound.h"
 
 extern int load_game(char *filename);
 extern int parse_op();
@@ -23,6 +24,7 @@ int main(int argc, char ** argv)
 	}
 
 	gfx_init();
+	sound_init();
 	int quit = 0;
 	while(!quit)
 	{

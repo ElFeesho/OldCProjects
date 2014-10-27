@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "gfx.h"
+#include "input.h"
+#include "sound.h"
 
 static const int 		PROGRAM_START_OFFSET = 0x200;
 
@@ -16,8 +18,6 @@ static unsigned char 	SP = 0;
 static unsigned char DT = 0;
 static unsigned char ST = 0;
 
-extern int input_readkey();
-extern int input_keydown(int key);
 
 typedef void (*op_handler)(short);
 
@@ -225,6 +225,7 @@ void op_FXXX(short opperand)
 	else if((opperand&0xff)==0x18)
 	{
 		ST = regs[(opperand&0x0f00)>>8];
+		sound_start();
 	}
 	else if((opperand&0xff)==0x1E)
 	{
@@ -373,6 +374,10 @@ void decrement_timers()
 	if(ST>0)
 	{
 		ST--;
+	}
+	else
+	{
+		sound_stop();
 	}
 }
 
