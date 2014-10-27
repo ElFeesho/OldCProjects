@@ -16,6 +16,8 @@ static unsigned char 	SP = 0;
 static unsigned char DT = 0;
 static unsigned char ST = 0;
 
+extern int input_readkey();
+extern int input_keydown(int key);
 
 typedef void (*op_handler)(short);
 
@@ -187,16 +189,18 @@ void op_DXXX(short opperand)
 
 void op_EXXX(short opperand)
 {
+	int targetKey = regs[(opperand&0x0f00)>>8];
+	int keydown = input_keydown(targetKey);
 	if((opperand&0xff)==0x9E)
 	{
-		if(keys[regs[(opperand&0x0f00)>>8]]>0)
+		if(keydown)
 		{
 			PC += 2;
 		}
 	}
-	else if((opperand&0xff)==0xA1) // No need to check but still..
+	else if((opperand&0xff)==0xA1)
 	{
-		if(keys[regs[(opperand&0x0f00)>>8]]==0)
+		if(!keydown)
 		{
 			PC += 2;
 		}
@@ -211,18 +215,8 @@ void op_FXXX(short opperand)
 	}
 	else if((opperand&0xff)==0x0A)
 	{
-		SDL_Event ev;
-		ev.type = 0;
-		while(ev.type!=SDL_KEYDOWN)
-		{
-			SDL_WaitEvent(&ev);
-			if(ev.type == SDL_KEYDOWN)
-			{
-				// just one key right now TODO
-				regs[(opperand&0x0f00)>>8] = 1;
-			}
-		}
-
+		int key = (opperand & 0x0f00) >> 8;
+		regs[key] = input_readkey();
 	}
 	else if((opperand&0xff)==0x15)
 	{
@@ -369,6 +363,19 @@ void print_cpu_state()
 	fflush(stdout);
 }
 
+void decrement_timers()
+{
+	if(DT>0)
+	{
+		DT--;
+	}
+
+	if(ST>0)
+	{
+		ST--;
+	}
+}
+
 int parse_op()
 {
 	unsigned short op = get_op();
@@ -377,11 +384,7 @@ int parse_op()
 
 	opHandlerTable[operation](op&0x0fff);
 
-	if(DT>0)
-		DT--;
-
-	if(ST>0)
-		ST--;
+	
 
 	return 1;
 }
