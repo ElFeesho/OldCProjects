@@ -29,6 +29,8 @@ int gfx_get_pixel(int x, int y)
 int gfx_draw_pixel_on(int x, int y)
 {
 	int colour = 0xffffffff;
+	x &= 63;
+	y &= 31;
 	if(gfx_get_pixel(x*10, y*10))
 	{
 		colour = 0xff000000;
@@ -40,8 +42,7 @@ int gfx_draw_pixel_on(int x, int y)
 
 int gfx_draw(int x, int y, unsigned char *mem, int count)
 {
-	x %= 63;
-	y %= 31;
+	printf("DRAW: %d x %d\n", x, y);
 
 	int shouldFlip = 0;
 	for(int j = 0; j < count; j++)
@@ -51,7 +52,7 @@ int gfx_draw(int x, int y, unsigned char *mem, int count)
 		{
 			int pixelOn = byte & (1 << (8-i));
 			if(pixelOn)
-			{
+			{;;
 				shouldFlip |= gfx_draw_pixel_on(x+i, y + j);
 			}
 		}
