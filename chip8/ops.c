@@ -137,10 +137,10 @@ void op_8XXX(short opperand)
 	}
 	else if(subOp == 5)
 	{
-		if(regs[lhs] > regs[rhs] > 255)
-			regs[15] = 1;
-		else
+		if(regs[rhs] > regs[lhs])
 			regs[15] = 0;
+		else
+			regs[15] = 1;
 		regs[lhs] -= regs[rhs];
 	}
 	else if(subOp == 6)
@@ -151,11 +151,11 @@ void op_8XXX(short opperand)
 	}
 	else if(subOp == 7)
 	{
-		if(regs[lhs] < regs[rhs] > 255)
-			regs[15] = 1;
-		else
+		if(regs[lhs] > regs[rhs])
 			regs[15] = 0;
-		regs[rhs] -= regs[lhs];
+		else
+			regs[15] = 1;
+		regs[lhs] = regs[rhs] - regs[lhs];
 	}
 	else if(subOp == 0xE)
 	{

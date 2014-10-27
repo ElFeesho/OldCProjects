@@ -40,24 +40,14 @@ int gfx_draw_pixel_on(int x, int y)
 
 int gfx_draw(int x, int y, unsigned char *mem, int count)
 {
-	int i;
-	int j;
-
-	if(x > 64)
-	{
-		x = x % 64;
-	}
-
-	if(y > 32)
-	{
-		y = y % 32;
-	}
+	x %= 63;
+	y %= 31;
 
 	int shouldFlip = 0;
-	for(j = 0; j < count; j++)
+	for(int j = 0; j < count; j++)
 	{
 		unsigned char byte = mem[j];
-		for(i = 0; i < 8; i++)
+		for(int i = 0; i < 8; i++)
 		{
 			int pixelOn = byte & (1 << (8-i));
 			if(pixelOn)
