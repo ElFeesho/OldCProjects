@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include "gfx.h"
 #include "sound.h"
+#include "ops.h"
 
 extern int load_game(char *filename);
 extern int parse_op();
@@ -54,7 +55,6 @@ int main(int argc, char ** argv)
 		{
 			parse_op();
 		}
-
 		SDL_Flip(SDL_GetVideoSurface());
 		SDL_Delay(1000/60);
 		decrement_timers();

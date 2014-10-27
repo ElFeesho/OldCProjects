@@ -43,6 +43,16 @@ int gfx_draw(int x, int y, unsigned char *mem, int count)
 	int i;
 	int j;
 
+	if(x > 64)
+	{
+		x = x % 64;
+	}
+
+	if(y > 32)
+	{
+		y = y % 32;
+	}
+
 	int shouldFlip = 0;
 	for(j = 0; j < count; j++)
 	{

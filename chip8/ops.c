@@ -394,3 +394,9 @@ int parse_op()
 	return 1;
 }
 
+ int draw_flag_set()
+ {
+ 	int flagset = regs[15];
+ 	regs[15] = 0;
+ 	return flagset;
+ }

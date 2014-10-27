@@ -11,4 +11,6 @@ extern int parse_op();
 
 extern int load_game(char *fname);
 
+extern int draw_flag_set();
+
 #endif
