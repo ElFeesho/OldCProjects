@@ -1,5 +1,5 @@
 OBJS=main.o gfx.o ops.o input.o sound.o
-TOBJS=ops.o gfx.o input.o sound.o test.o
+TOBJS=ops.o fake_gfx.o fake_input.o sound.o test.o
 TPROG=tchip8
 PROG=chip8
 LIBS=`sdl-config --libs` -lm

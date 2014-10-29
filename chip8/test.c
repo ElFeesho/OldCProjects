@@ -1,6 +1,11 @@
 #include "ops.h"
+#include "input.h"
+#include "gfx.h"
 #include <stdio.h>
 #include <string.h>
+
+static const int TEST_KEY_2 = 2;
+static const int TEST_KEY_4 = 4;
 
 static inline short TO_OP(short op)
 {
@@ -15,6 +20,19 @@ static inline short TO_OP(short op)
 	}
 	return op;
 }
+
+/*
+	Functions for faking input 
+*/
+void fake_set_readkey_result(int value);
+void fake_set_keydown_result(int key);
+
+int fake_gfx_cls_called();
+int fake_gfx_draw_last_x();
+int fake_gfx_draw_last_y();
+int fake_gfx_draw_last_count();
+void fake_gfx_cls_reset();
+void fake_gfx_draw_reset();
 
 static void assertEquals(int expected, int actual, const char *message, const char *func)
 {
@@ -199,7 +217,7 @@ void test_whenDelayTimeIsNonZero_DecrementingTimersResultsInDelayTimer()
 Instruction tests 
 */
 
-void test_whenOp_1NNN_isInvoked_PCRegisterUpdatesToNNN()
+void test_1NNN_isInvoked_PCRegisterUpdatesToNNN()
 {
 	chip8_cpu_t *cpu = create_cpu();
 	short op = TO_OP(0x1123);
@@ -209,7 +227,7 @@ void test_whenOp_1NNN_isInvoked_PCRegisterUpdatesToNNN()
 	destroy_cpu(cpu);
 }
 
-void test_whenOp_BNNN_isInvoked_PCRegisterUpdatesToNNN_Plus_Register_1()
+void test_BNNN_isInvoked_PCRegisterUpdatesToNNN_Plus_Register_1()
 {
 	chip8_cpu_t *cpu = create_cpu();
 	short op = TO_OP(0xB002);
@@ -222,7 +240,7 @@ void test_whenOp_BNNN_isInvoked_PCRegisterUpdatesToNNN_Plus_Register_1()
 	destroy_cpu(cpu);	
 }
 
-void test_whenOp_2NNN_isInvoked_PCRegisterUpdatesToNNN()
+void test_2NNN_isInvoked_PCRegisterUpdatesToNNN()
 {
 	chip8_cpu_t *cpu = create_cpu();
 	short op = TO_OP(0x2123);
@@ -234,7 +252,7 @@ void test_whenOp_2NNN_isInvoked_PCRegisterUpdatesToNNN()
 	destroy_cpu(cpu);	
 }
 
-void test_whenOp_2NNN_isInvoked_TheAddressOfTheNextInstructionIsStoredInTheCallStack()
+void test_2NNN_isInvoked_TheAddressOfTheNextInstructionIsStoredInTheCallStack()
 {
 	chip8_cpu_t *cpu = create_cpu();
 	short op = TO_OP(0x2123);
@@ -251,7 +269,7 @@ void test_whenOp_2NNN_isInvoked_TheAddressOfTheNextInstructionIsStoredInTheCallS
 	destroy_cpu(cpu);	
 }
 
-void test_whenOp_2NNN_isInvoked_TheStackPointerIsIncremented()
+void test_2NNN_isInvoked_TheStackPointerIsIncremented()
 {
 	chip8_cpu_t *cpu = create_cpu();
 	short op = TO_OP(0x2123);
@@ -264,7 +282,7 @@ void test_whenOp_2NNN_isInvoked_TheStackPointerIsIncremented()
 	destroy_cpu(cpu);	
 }
 
-void test_whenOp_00EE_isInvoked_TheStackPointerIsDecremented()
+void test_00EE_isInvoked_TheStackPointerIsDecremented()
 {
 	chip8_cpu_t *cpu = create_cpu();
 	short op = TO_OP(0x00EE);
@@ -279,7 +297,7 @@ void test_whenOp_00EE_isInvoked_TheStackPointerIsDecremented()
 	destroy_cpu(cpu);	
 }
 
-void test_whenOp_00EE_isInvoked_ThePCRegisterContainsTheAddressOfTheNextInstruction_FromTheStack()
+void test_00EE_isInvoked_ThePCRegisterContainsTheAddressOfTheNextInstruction_FromTheStack()
 {
 	chip8_cpu_t *cpu = create_cpu();
 	short op = TO_OP(0x00EE);
@@ -294,7 +312,7 @@ void test_whenOp_00EE_isInvoked_ThePCRegisterContainsTheAddressOfTheNextInstruct
 	destroy_cpu(cpu);	
 }
 
-void test_whenOp_3XNN_isInvoked_GivenRegisterX_EqualsNN_ThePCIsIncrementedToSkipTheNextInstruction()
+void test_3XNN_isInvoked_GivenRegisterX_EqualsNN_ThePCIsIncrementedToSkipTheNextInstruction()
 {
 	chip8_cpu_t *cpu = create_cpu();
 	short op = TO_OP(0x30ff);
@@ -308,7 +326,7 @@ void test_whenOp_3XNN_isInvoked_GivenRegisterX_EqualsNN_ThePCIsIncrementedToSkip
 	destroy_cpu(cpu);	
 }
 
-void test_whenOp_3XNN_isInvoked_GivenRegisterX_DoesNotEqual_NN_TheNextInstructionIsNotSkipped()
+void test_3XNN_isInvoked_GivenRegisterX_DoesNotEqual_NN_TheNextInstructionIsNotSkipped()
 {
 	chip8_cpu_t *cpu = create_cpu();
 	short op = TO_OP(0x30ff);
@@ -320,6 +338,282 @@ void test_whenOp_3XNN_isInvoked_GivenRegisterX_DoesNotEqual_NN_TheNextInstructio
 
 	assertEquals(0x202, cpu->PC, "PC does not match expected value", __FUNCTION__);
 	destroy_cpu(cpu);	
+}
+
+
+void test_5XY0_isInvoked_GivenRegisterX_Equals_RegisterY_ThePCIsIncrementedToSkipTheNextInstruction()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0x5120);
+	cpu->regs[1] = 0x88;
+	cpu->regs[2] = 0x88;
+	load_game(cpu, (void*)&op, 2);
+
+	parse_op(cpu);
+
+	assertEquals(0x204, cpu->PC, "PC does not match expected value", __FUNCTION__);
+	destroy_cpu(cpu);	
+}
+
+void test_5XY0_isInvoked_GivenRegisterX_DoesNotEqual_RegisterY_TheNextInstructionIsNotSkipped()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0x5120);
+	cpu->regs[1] = 0x88;
+	cpu->regs[2] = 0xff;
+
+	load_game(cpu, (void*)&op, 2);
+
+	parse_op(cpu);
+
+	assertEquals(0x202, cpu->PC, "PC does not match expected value", __FUNCTION__);
+	destroy_cpu(cpu);	
+}
+
+void test_4XNN_isInvoked_GivenRegisterX_DoesNotEqual_NN_TheNextInstructionIsSkipped()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0x4123);
+	cpu->regs[1] = 0xff;
+
+	load_game(cpu, (void*)&op, 2);
+
+	parse_op(cpu);
+
+	assertEquals(0x204, cpu->PC, "PC does not match expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_4XNN_isInvoked_GivenRegisterX_isEqualTo_NN_TheNextInstructionIsNotSkipped()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0x4123);
+	cpu->regs[1] = 0x23;
+
+	load_game(cpu, (void*)&op, 2);
+
+	parse_op(cpu);
+
+	assertEquals(0x202, cpu->PC, "PC does not match expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_9XY0_isInvoked_GivenRegisterX_DoesNotEqual_RegisterY_TheNextInstructionIsSkipped()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0x9120);
+	cpu->regs[1] = 0x88;
+	cpu->regs[2] = 0xff;
+
+	load_game(cpu, (void*)&op, 2);
+
+	parse_op(cpu);
+
+	assertEquals(0x204, cpu->PC, "PC does not match expected value", __FUNCTION__);
+	destroy_cpu(cpu);	
+}
+
+void test_9XY0_isInvoked_GivenRegisterX_isEqualTo_RegisterY_TheNextInstructionIsNotSkipped()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0x9120);
+	cpu->regs[1] = 0x88;
+	cpu->regs[2] = 0x88;
+
+	load_game(cpu, (void*)&op, 2);
+
+	parse_op(cpu);
+
+	assertEquals(0x202, cpu->PC, "PC does not match expected value", __FUNCTION__);
+	destroy_cpu(cpu);	
+}
+
+void test_FX15_isInvoked_DelayTimerIsSetTo_TheValueOfRegisterX()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xF215);
+	cpu->regs[2] = 0x88;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x88, cpu->DT, "Delay Timer does not match expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_FX07_isInvoked_RegisterX_IsSetToTheValueOf_TheDelayTimer()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xF207);
+	cpu->DT = 0x88;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x88, cpu->regs[2], "Register does not contain the correct value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_FX18_isInvoked_SoundTimer_IsSetToTheValueOf_RegisterX()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xF218);
+	cpu->regs[2] = 0x88;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x88, cpu->ST, "Sound Timer does not contain the correct value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_FX0A_isInvoked_TheSystemReadsAKey_ThePressedKeyIsStoredIn_RegisterX()
+{
+	fake_set_readkey_result(TEST_KEY_4);
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xF30A);
+	
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(TEST_KEY_4, cpu->regs[3], "Key press value was not stored", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_EX9E_isInvoked_IfKeyValueOfRegisterX_isDown_theNextInstructionIsSkipped()
+{
+	fake_set_keydown_result(TEST_KEY_4);
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xE39E);
+	cpu->regs[3] = TEST_KEY_4;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x204, cpu->PC, "PC is not the expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_EX9E_isInvoked_IfKeyValueOfRegisterX_isNotDown_noInstructionsAreSkipped()
+{
+	fake_set_keydown_result(TEST_KEY_4);
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xE39E);
+	cpu->regs[3] = TEST_KEY_2;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x202, cpu->PC, "PC is not the expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_EXA1_isInvoked_IfKeyValueOfRegisterX_isNotDown_theNextInstructionIsSkipped()
+{
+	fake_set_keydown_result(TEST_KEY_2);
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xE3A1);
+	cpu->regs[3] = TEST_KEY_4;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x204, cpu->PC, "PC is not the expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_EXA1_isInvoked_IfKeyValueOfRegisterX_isDown_noInstructionsAreSkipped()
+{
+	fake_set_keydown_result(TEST_KEY_2);
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xE3A1);
+	cpu->regs[3] = TEST_KEY_2;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x202, cpu->PC, "PC is not the expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_ANNN_isInvoked_I_RegisterIsSetTo_NNN()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xA123);
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x123, cpu->I, "I is not the expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_FX1E_isInvoked_TheValueOfRegisterX_IsAddedTo_I()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xF11E);
+	cpu->regs[1] = 0x10;
+	cpu->I = 0x10;
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x20, cpu->I, "I is not the expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_DXYN_isInvoked_ASpriteIsRendered_atXCoord_RegisterX_atYCoord_RegisterY_OfHeight_N()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xD123);
+	cpu->regs[1] = 5;
+	cpu->regs[2] = 15;
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(5, fake_gfx_draw_last_x(), "X position is not expected value", __FUNCTION__);
+	assertEquals(15, fake_gfx_draw_last_y(), "Y position is not expected value", __FUNCTION__);
+	assertEquals(3, fake_gfx_draw_last_count(), "Count is not expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_00E0_isInvoked_TheScreenIsCleared()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0x00E0);
+	
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertTrue(fake_gfx_cls_called(), "X position is not expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_FX29_isInvoked_I_IsSetToTheAddressOfTheFontCharacter_WithTheValueOf_RegisterX()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xF529);
+	cpu->regs[5] = 0x02;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+	
+	assertEquals(0x02*5, cpu->I, "I is not the expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_FX33_isInvoked_TheValueAt_RegisterX_IsStoredAsBinaryCodedDecimal_AtTheMemoryAddressOfI()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xF033);
+	cpu->regs[0] = 0x80;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+	
+	assertEquals(1, cpu->memory[cpu->I], "Memory at address I is not the expected value", __FUNCTION__);
+	assertEquals(2, cpu->memory[cpu->I+1], "Memory at address I + 1 is not the expected value", __FUNCTION__);
+	assertEquals(8, cpu->memory[cpu->I+2], "Memory at address I + 2 is not the expected value", __FUNCTION__);
+	destroy_cpu(cpu);
 }
 
 typedef void (*testFunc)();
@@ -337,15 +631,35 @@ testFunc testFunctions[] = {
 	test_aLoadedProgram_LoadsAtTheCorrectAddressInMemory,
 	test_whenDelayTimeIsZero_DecrementingTimersDoesNotAffectDelayTimer,
 	test_whenDelayTimeIsNonZero_DecrementingTimersResultsInDelayTimer,
-	test_whenOp_1NNN_isInvoked_PCRegisterUpdatesToNNN,
-	test_whenOp_BNNN_isInvoked_PCRegisterUpdatesToNNN_Plus_Register_1,
-	test_whenOp_2NNN_isInvoked_PCRegisterUpdatesToNNN,
-	test_whenOp_2NNN_isInvoked_TheAddressOfTheNextInstructionIsStoredInTheCallStack,
-	test_whenOp_2NNN_isInvoked_TheStackPointerIsIncremented,
-	test_whenOp_00EE_isInvoked_TheStackPointerIsDecremented,
-	test_whenOp_00EE_isInvoked_ThePCRegisterContainsTheAddressOfTheNextInstruction_FromTheStack,
-	test_whenOp_3XNN_isInvoked_GivenRegisterX_EqualsNN_ThePCIsIncrementedToSkipTheNextInstruction,
-	test_whenOp_3XNN_isInvoked_GivenRegisterX_DoesNotEqual_NN_TheNextInstructionIsNotSkipped,
+	test_1NNN_isInvoked_PCRegisterUpdatesToNNN,
+	test_BNNN_isInvoked_PCRegisterUpdatesToNNN_Plus_Register_1,
+	test_2NNN_isInvoked_PCRegisterUpdatesToNNN,
+	test_2NNN_isInvoked_TheAddressOfTheNextInstructionIsStoredInTheCallStack,
+	test_2NNN_isInvoked_TheStackPointerIsIncremented,
+	test_00EE_isInvoked_TheStackPointerIsDecremented,
+	test_00EE_isInvoked_ThePCRegisterContainsTheAddressOfTheNextInstruction_FromTheStack,
+	test_3XNN_isInvoked_GivenRegisterX_EqualsNN_ThePCIsIncrementedToSkipTheNextInstruction,
+	test_3XNN_isInvoked_GivenRegisterX_DoesNotEqual_NN_TheNextInstructionIsNotSkipped,
+	test_5XY0_isInvoked_GivenRegisterX_Equals_RegisterY_ThePCIsIncrementedToSkipTheNextInstruction,
+	test_5XY0_isInvoked_GivenRegisterX_DoesNotEqual_RegisterY_TheNextInstructionIsNotSkipped,
+	test_4XNN_isInvoked_GivenRegisterX_DoesNotEqual_NN_TheNextInstructionIsSkipped,
+	test_4XNN_isInvoked_GivenRegisterX_isEqualTo_NN_TheNextInstructionIsNotSkipped,
+	test_9XY0_isInvoked_GivenRegisterX_DoesNotEqual_RegisterY_TheNextInstructionIsSkipped,
+	test_9XY0_isInvoked_GivenRegisterX_isEqualTo_RegisterY_TheNextInstructionIsNotSkipped,
+	test_FX15_isInvoked_DelayTimerIsSetTo_TheValueOfRegisterX,
+	test_FX07_isInvoked_RegisterX_IsSetToTheValueOf_TheDelayTimer,
+	test_FX18_isInvoked_SoundTimer_IsSetToTheValueOf_RegisterX,
+	test_FX0A_isInvoked_TheSystemReadsAKey_ThePressedKeyIsStoredIn_RegisterX,
+	test_EX9E_isInvoked_IfKeyValueOfRegisterX_isDown_theNextInstructionIsSkipped,
+	test_EX9E_isInvoked_IfKeyValueOfRegisterX_isNotDown_noInstructionsAreSkipped,
+	test_EXA1_isInvoked_IfKeyValueOfRegisterX_isNotDown_theNextInstructionIsSkipped,
+	test_EXA1_isInvoked_IfKeyValueOfRegisterX_isDown_noInstructionsAreSkipped,
+	test_ANNN_isInvoked_I_RegisterIsSetTo_NNN,
+	test_FX1E_isInvoked_TheValueOfRegisterX_IsAddedTo_I,
+	test_DXYN_isInvoked_ASpriteIsRendered_atXCoord_RegisterX_atYCoord_RegisterY_OfHeight_N,
+	test_00E0_isInvoked_TheScreenIsCleared,
+	test_FX29_isInvoked_I_IsSetToTheAddressOfTheFontCharacter_WithTheValueOf_RegisterX,
+	test_FX33_isInvoked_TheValueAt_RegisterX_IsStoredAsBinaryCodedDecimal_AtTheMemoryAddressOfI,
 	0
 };
 
@@ -357,6 +671,8 @@ int main(int argc, char **argv)
 	testFunc currentTest = testFunctions[i];
 	while(currentTest != NULL)
 	{
+		fake_gfx_cls_reset();
+		fake_gfx_draw_reset();
 		currentTest();
 		currentTest = testFunctions[++i];
 	}

@@ -15,7 +15,6 @@ void op_00XX(chip8_cpu_t *cpu, short opperand)
 	int op = opperand & 0xff;
 	if(op == 0xE0)
 	{
-		printf("CLEARING SCREEN\n");
 		gfx_cls();
 	}
 	else if(op == 0xEE)
@@ -222,7 +221,10 @@ void op_FXXX(chip8_cpu_t *cpu, short opperand)
 	else if((opperand&0xff)==0x0A)
 	{
 		int key = (opperand & 0x0f00) >> 8;
-		SDL_Flip(SDL_GetVideoSurface());
+		if (SDL_GetVideoSurface() != NULL)
+		{
+			SDL_Flip(SDL_GetVideoSurface());
+		}
 		cpu->regs[key] = input_readkey();
 	}
 	else if((opperand&0xff)==0x15)
@@ -256,8 +258,6 @@ void op_FXXX(chip8_cpu_t *cpu, short opperand)
 		cpu->memory[cpu->I] = (char)hundreds;
 		cpu->memory[cpu->I+1] = (char)tens;
 		cpu->memory[cpu->I+2] = (char)units;
-
-		printf("BCD %d to %d %d %d\n", cpu->regs[lhs], hundreds, tens, units);
 	}
 	else if((opperand&0xff)==0x55)
 	{
