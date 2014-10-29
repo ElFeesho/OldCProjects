@@ -836,6 +836,145 @@ void test_8XY5_isInvoked_GivenTheValueIn_RegisterY_isLessThan_RegisterX_Register
 	destroy_cpu(cpu);
 }
 
+void test_8XY2_isInvoked_RegisterX_IsSetTo_RegisterX_BitwiseAnd_RegisterY()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x8122);
+
+	cpu->regs[1] = 0xf3;
+	cpu->regs[2] = 0xf0;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0xf0, cpu->regs[1], "Register 1 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+}
+
+void test_8XY1_isInvoked_RegisterX_IsSetTo_RegisterX_BitwiseOr_RegisterY()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x8121);
+
+	cpu->regs[1] = 0xf0;
+	cpu->regs[2] = 0x0f;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0xff, cpu->regs[1], "Register 1 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+}
+
+void test_8XY3_isInvoked_RegisterX_IsSetTo_RegisterX_BitwiseXOr_RegisterY()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x8123);
+
+	cpu->regs[1] = 0xff;
+	cpu->regs[2] = 0xaa;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x55, cpu->regs[1], "Register 1 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+}
+
+void test_8XY6_isInvoked_RegisterY_isShiftedRightOneBit_andTheResultIsStoredIn_RegisterX()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x8126);
+
+	cpu->regs[1] = 0xff;
+	cpu->regs[2] = 0x02;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x01, cpu->regs[1], "Register 1 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+}
+
+void test_8XYE_isInvoked_RegisterY_isShiftedLeftOneBit_andTheResultIsStoredIn_RegisterX()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x812E);
+
+	cpu->regs[1] = 0xff;
+	cpu->regs[2] = 0x01;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x02, cpu->regs[1], "Register 1 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+}
+
+void test_8XY6_isInvoked_Register15_isSetToTheLeastSignificantBit_OfRegisterY()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x8126);
+
+	cpu->regs[2] = 0x03;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x01, cpu->regs[15], "Register 15 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+
+	cpu = create_cpu();
+
+	cpu->regs[2] = 0x02;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x00, cpu->regs[15], "Register 15 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+}
+
+void test_8XYE_isInvoked_Register15_isSetToTheMostSignificantBit_OfRegisterY()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x812E);
+
+	cpu->regs[2] = 0x80;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x01, cpu->regs[15], "Register 15 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+
+	cpu = create_cpu();
+
+	cpu->regs[2] = 0x40;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x0, cpu->regs[15], "Register 15 is not the expected value.", __FUNCTION__);
+	
+	destroy_cpu(cpu);
+}
+
 typedef void (*testFunc)();
 
 testFunc testFunctions[] = {
@@ -893,6 +1032,13 @@ testFunc testFunctions[] = {
 	test_8XY5_isInvoked_RegisterY_isSubtractedFrom_RegisterX,
 	test_8XY5_isInvoked_GivenTheValueIn_RegisterY_isGreaterThan_RegisterX_Register15_isZero,
 	test_8XY5_isInvoked_GivenTheValueIn_RegisterY_isLessThan_RegisterX_Register15_isOne,
+	test_8XY2_isInvoked_RegisterX_IsSetTo_RegisterX_BitwiseAnd_RegisterY,
+	test_8XY1_isInvoked_RegisterX_IsSetTo_RegisterX_BitwiseOr_RegisterY,
+	test_8XY3_isInvoked_RegisterX_IsSetTo_RegisterX_BitwiseXOr_RegisterY,
+	test_8XY6_isInvoked_RegisterY_isShiftedRightOneBit_andTheResultIsStoredIn_RegisterX,
+	test_8XYE_isInvoked_RegisterY_isShiftedLeftOneBit_andTheResultIsStoredIn_RegisterX,
+	test_8XY6_isInvoked_Register15_isSetToTheLeastSignificantBit_OfRegisterY,
+	test_8XYE_isInvoked_Register15_isSetToTheMostSignificantBit_OfRegisterY,
 	0
 };
 

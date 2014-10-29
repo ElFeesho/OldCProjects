@@ -145,7 +145,7 @@ void op_8XXX(chip8_cpu_t *cpu, short opperand)
 	}
 	else if(subOp == 6)
 	{
-		cpu->regs[15] = cpu->regs[lhs]&0x01;
+		cpu->regs[15] = cpu->regs[rhs]&0x01;
 
 		cpu->regs[lhs] = cpu->regs[rhs] >> 1;
 	}
@@ -164,8 +164,7 @@ void op_8XXX(chip8_cpu_t *cpu, short opperand)
 	}
 	else if(subOp == 0xE)
 	{
-
-		cpu->regs[15] = (cpu->regs[lhs]&0x80) >> 7;
+		cpu->regs[15] = (cpu->regs[rhs]&0x80) >> 7;
 
 		cpu->regs[lhs] = cpu->regs[rhs] << 1;
 	}
