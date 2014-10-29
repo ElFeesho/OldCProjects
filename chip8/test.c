@@ -2,11 +2,26 @@
 #include <stdio.h>
 #include <string.h>
 
+static inline short TO_OP(short op)
+{
+	int test = 1;
+	if(((char*)&test)[0] == 1)
+	{
+		// Convert LE to BE
+		char *operation = (char*)&op;
+		operation[0] ^= operation[1];
+		operation[1] ^= operation[0];
+		operation[0] ^= operation[1];
+	}
+	return op;
+}
+
 static void assertEquals(int expected, int actual, const char *message, const char *func)
 {
 	if(expected != actual)
 	{
 		fprintf(stderr, "%s: %s\n", func, message);
+		fprintf(stderr, "Expected: %d (%x) actual: %d (%x)\n", expected, expected, actual, actual);
 		printf("\nF\n");
 	}
 	else
@@ -165,12 +180,132 @@ void test_aLoadedProgram_LoadsAtTheCorrectAddressInMemory()
 
 void test_whenDelayTimeIsZero_DecrementingTimersDoesNotAffectDelayTimer()
 {
-
+	chip8_cpu_t *cpu = create_cpu();
+	decrement_timers(cpu);
+	assertEquals(0, cpu->DT, "Delay timer is not 0", __FUNCTION__);
+	destroy_cpu(cpu);
 }
 
 void test_whenDelayTimeIsNonZero_DecrementingTimersResultsInDelayTimer()
 {
+	chip8_cpu_t *cpu = create_cpu();
+	cpu->DT = 10;
+	decrement_timers(cpu);
+	assertEquals(9, cpu->DT, "Delay timer is not 0", __FUNCTION__);
+	destroy_cpu(cpu);
+}
 
+/*
+Instruction tests 
+*/
+
+void test_whenOp_1NNN_isInvoked_PCRegisterUpdatesToNNN()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0x1123);
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+	assertEquals(0x123, cpu->PC, "PC should be 0x123", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_whenOp_BNNN_isInvoked_PCRegisterUpdatesToNNN_Plus_Register_1()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xB002);
+	cpu->regs[0] = 0x2;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+	
+	assertEquals(0x4, cpu->PC, "PC should be 0x4", __FUNCTION__);
+	destroy_cpu(cpu);	
+}
+
+void test_whenOp_2NNN_isInvoked_PCRegisterUpdatesToNNN()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0x2123);
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+	
+	assertEquals(0x123, cpu->PC, "PC should be 0x4", __FUNCTION__);
+	destroy_cpu(cpu);	
+}
+
+void test_whenOp_2NNN_isInvoked_TheAddressOfTheNextInstructionIsStoredInTheCallStack()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0x2123);
+
+	load_game(cpu, (void*)&op, 2);
+
+	short nextInstructionAddress = cpu->PC + 2;
+
+	parse_op(cpu);
+
+	short stackContents = cpu->stack[0];
+	
+	assertEquals(nextInstructionAddress, stackContents, "Stack contents does not match expected return address", __FUNCTION__);
+	destroy_cpu(cpu);	
+}
+
+void test_whenOp_2NNN_isInvoked_TheStackPointerIsIncremented()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0x2123);
+
+	load_game(cpu, (void*)&op, 2);
+
+	parse_op(cpu);
+
+	assertEquals(1, cpu->SP, "Stack pointer does not match expected value", __FUNCTION__);
+	destroy_cpu(cpu);	
+}
+
+void test_whenOp_00EE_isInvoked_TheStackPointerIsDecremented()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0x00EE);
+	cpu->SP = 1;
+
+
+	load_game(cpu, (void*)&op, 2);
+
+	parse_op(cpu);
+
+	assertEquals(0, cpu->SP, "Stack pointer does not match expected value", __FUNCTION__);
+	destroy_cpu(cpu);	
+}
+
+void test_whenOp_00EE_isInvoked_ThePCRegisterContainsTheAddressOfTheNextInstruction_FromTheStack()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0x00EE);
+	cpu->SP = 1;
+	cpu->stack[0] = 0x123;
+
+	load_game(cpu, (void*)&op, 2);
+
+	parse_op(cpu);
+
+	assertEquals(0x123, cpu->PC, "PC does not match expected value", __FUNCTION__);
+	destroy_cpu(cpu);	
+}
+
+void test_whenOp_3XNN_isInvoked_GivenRegisterX_EqualsNN_ThePCIsIncrementedToSkipTheNextInstruction()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0x30ff);
+	cpu->regs[0] = 0xff;
+
+	load_game(cpu, (void*)&op, 2);
+
+	parse_op(cpu);
+
+	assertEquals(0x204, cpu->PC, "PC does not match expected value", __FUNCTION__);
+	destroy_cpu(cpu);	
 }
 
 typedef void (*testFunc)();
@@ -187,7 +322,15 @@ testFunc testFunctions[] = {
 	test_aCpuCanBeCreated_withMemoryDefaultValue,
 	test_aLoadedProgram_LoadsAtTheCorrectAddressInMemory,
 	test_whenDelayTimeIsZero_DecrementingTimersDoesNotAffectDelayTimer,
-	test_whenDelayTimeIsNonZero_DecrementingTimersResultsInDelayTimer
+	test_whenDelayTimeIsNonZero_DecrementingTimersResultsInDelayTimer,
+	test_whenOp_1NNN_isInvoked_PCRegisterUpdatesToNNN,
+	test_whenOp_BNNN_isInvoked_PCRegisterUpdatesToNNN_Plus_Register_1,
+	test_whenOp_2NNN_isInvoked_PCRegisterUpdatesToNNN,
+	test_whenOp_2NNN_isInvoked_TheAddressOfTheNextInstructionIsStoredInTheCallStack,
+	test_whenOp_2NNN_isInvoked_TheStackPointerIsIncremented,
+	test_whenOp_00EE_isInvoked_TheStackPointerIsDecremented,
+	test_whenOp_00EE_isInvoked_ThePCRegisterContainsTheAddressOfTheNextInstruction_FromTheStack,
+	test_whenOp_3XNN_isInvoked_GivenRegisterX_EqualsNN_ThePCIsIncrementedToSkipTheNextInstruction,
 	0
 };
 

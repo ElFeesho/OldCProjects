@@ -20,10 +20,8 @@ void op_00XX(chip8_cpu_t *cpu, short opperand)
 	}
 	else if(op == 0xEE)
 	{
-		int sp = cpu->SP;
-		cpu->SP -= 1;
-		cpu->PC = cpu->stack[sp];
-		printf("POPPED STACK: %d\n", cpu->SP);
+		cpu->SP--;
+		cpu->PC = cpu->stack[cpu->SP];
 	}
 }
 
@@ -32,7 +30,7 @@ void op_00XX(chip8_cpu_t *cpu, short opperand)
 */
 void op_1XXX(chip8_cpu_t *cpu, short opperand)
 {
-	cpu->PC = opperand;
+	cpu->PC = opperand&0x0fff;
 }
 
 /*
@@ -52,14 +50,11 @@ void op_CXXX(chip8_cpu_t *cpu, short operand)
 
 void op_2XXX(chip8_cpu_t *cpu, short opperand)
 {
-	printf("Attempting to jump: %d\n", cpu->SP);
 	if(cpu->SP<16)
 	{
 		cpu->stack[cpu->SP] = cpu->PC;
 		cpu->PC = opperand;
 		cpu->SP++;
-
-		printf("PUSHED STACK: %d\n", cpu->SP);
 	}
 	else
 	{
@@ -69,7 +64,7 @@ void op_2XXX(chip8_cpu_t *cpu, short opperand)
 
 void op_3XXX(chip8_cpu_t *cpu, short opperand)
 {
-	if(cpu->regs[(opperand & 0x0f00) >> 8] == (opperand & 0x000f))
+	if(cpu->regs[(opperand & 0x0f00) >> 8] == (opperand & 0x00ff))
 	{
 		cpu->PC += 2;
 	}

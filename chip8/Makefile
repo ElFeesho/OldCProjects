@@ -10,6 +10,7 @@ all:$(OBJS)
 
 test:$(TOBJS)
 	gcc -o $(TPROG) $(TOBJS) $(LIBS)
+	./$(TPROG)
 
 %o:%c
 	gcc -c $(CFLAGS) $<
