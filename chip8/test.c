@@ -695,6 +695,147 @@ void test_FX65_isInvoked_I_isIncrementedByHowManyRegisterValuesHaveBeenLoaded_Pl
 	destroy_cpu(cpu);
 }
 
+void test_6XNN_isInvoked_NN_IsStoredInRegisterX()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x6218);
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x18, cpu->regs[2], "Register 2 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+}
+
+void test_7XNN_isInvoked_NN_IsAddedToRegisterX()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x7210);
+
+	cpu->regs[2] = 0x10;
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x20, cpu->regs[2], "Register 2 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+}
+
+void test_8XY0_isInvoked_ValueOfRegisterY_isStoredIn_RegisterX()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x8210);
+
+	cpu->regs[1] = 0x20;
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x20, cpu->regs[2], "Register 2 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+}
+
+void test_8XY4_isInvoked_ValueOfRegisterY_isAddedTo_RegisterX()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x8124);
+
+	cpu->regs[1] = 0x20;
+	cpu->regs[2] = 0x10;
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x30, cpu->regs[1], "Register 1 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+}
+
+void test_8XY4_isInvoked_Given_RegisterX_Plus_RegisterY_isNotGreaterThan_255_Register15_isZero()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x8124);
+
+	cpu->regs[1] = 0x20;
+	cpu->regs[2] = 0x10;
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x0, cpu->regs[15], "Register 15 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+}
+
+void test_8XY4_isInvoked_Given_RegisterX_Plus_RegisterY_isGreaterThan_255_Register15_isOne()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x8124);
+
+	cpu->regs[1] = 0xff;
+	cpu->regs[2] = 0xff;
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x1, cpu->regs[15], "Register 15 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+}
+
+void test_8XY5_isInvoked_RegisterY_isSubtractedFrom_RegisterX()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x8125);
+
+	cpu->regs[1] = 0x40;
+	cpu->regs[2] = 0x20;
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x20, cpu->regs[1], "Register 1 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+}
+
+void test_8XY5_isInvoked_GivenTheValueIn_RegisterY_isGreaterThan_RegisterX_Register15_isZero()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x8125);
+
+	cpu->regs[1] = 0x20;
+	cpu->regs[2] = 0x40;
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x0, cpu->regs[15], "Register 15 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+}
+
+void test_8XY5_isInvoked_GivenTheValueIn_RegisterY_isLessThan_RegisterX_Register15_isOne()
+{
+	chip8_cpu_t *cpu = create_cpu();
+
+	short op = TO_OP(0x8125);
+
+	cpu->regs[1] = 0x40;
+	cpu->regs[2] = 0x20;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+
+	assertEquals(0x1, cpu->regs[15], "Register 15 is not the expected value.", __FUNCTION__);
+
+	destroy_cpu(cpu);
+}
+
 typedef void (*testFunc)();
 
 testFunc testFunctions[] = {
@@ -743,6 +884,15 @@ testFunc testFunctions[] = {
 	test_FX55_isInvoked_I_isIncrementedByHowManyRegistersHaveBeenStored_plusOne,
 	test_FX65_isInvoked_RegisterValues_0_throughTo_RegisterX_AreSetToValuesFromMemory_PointedAtByI,
 	test_FX65_isInvoked_I_isIncrementedByHowManyRegisterValuesHaveBeenLoaded_PlusOne,
+	test_6XNN_isInvoked_NN_IsStoredInRegisterX,
+	test_7XNN_isInvoked_NN_IsAddedToRegisterX,
+	test_8XY0_isInvoked_ValueOfRegisterY_isStoredIn_RegisterX,
+	test_8XY4_isInvoked_ValueOfRegisterY_isAddedTo_RegisterX,
+	test_8XY4_isInvoked_Given_RegisterX_Plus_RegisterY_isNotGreaterThan_255_Register15_isZero,
+	test_8XY4_isInvoked_Given_RegisterX_Plus_RegisterY_isGreaterThan_255_Register15_isOne,
+	test_8XY5_isInvoked_RegisterY_isSubtractedFrom_RegisterX,
+	test_8XY5_isInvoked_GivenTheValueIn_RegisterY_isGreaterThan_RegisterX_Register15_isZero,
+	test_8XY5_isInvoked_GivenTheValueIn_RegisterY_isLessThan_RegisterX_Register15_isOne,
 	0
 };
 
