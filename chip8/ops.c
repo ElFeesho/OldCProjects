@@ -273,7 +273,7 @@ void op_DXXX(chip8_cpu_t *cpu, short opperand)
 	int y = cpu->regs[nybbleThree(opperand)];
 	int count = nybbleFour(opperand);
 
-	cpu->regs[CARRY_FLAG] = gfx_draw(x-1, y, cpu->memory+cpu->I, count)?1:0;
+	cpu->regs[CARRY_FLAG] = gfx_draw(x, y, cpu->memory+cpu->I, count)?1:0;
 }
 
 void op_EXXX(chip8_cpu_t *cpu, short opperand)
