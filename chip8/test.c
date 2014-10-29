@@ -616,6 +616,85 @@ void test_FX33_isInvoked_TheValueAt_RegisterX_IsStoredAsBinaryCodedDecimal_AtThe
 	destroy_cpu(cpu);
 }
 
+void test_FX55_isInvoked_Register0_throughTo_RegisterX_isStoredAtMemoryAddress_PointedAtBy_I()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xF655);
+	cpu->regs[0] = 0x00;
+	cpu->regs[1] = 0x01;
+	cpu->regs[2] = 0x02;
+	cpu->regs[3] = 0x03;
+	cpu->regs[4] = 0x04;
+	cpu->regs[5] = 0x05;
+	cpu->regs[6] = 0x06;
+
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+	
+	assertEquals(0x00, cpu->memory[0], "Memory at address 0 is not the expected value", __FUNCTION__);
+	assertEquals(0x01, cpu->memory[1], "Memory at address 1 is not the expected value", __FUNCTION__);
+	assertEquals(0x02, cpu->memory[2], "Memory at address 2 is not the expected value", __FUNCTION__);
+	assertEquals(0x03, cpu->memory[3], "Memory at address 3 is not the expected value", __FUNCTION__);
+	assertEquals(0x04, cpu->memory[4], "Memory at address 4 is not the expected value", __FUNCTION__);
+	assertEquals(0x05, cpu->memory[5], "Memory at address 5 is not the expected value", __FUNCTION__);
+	assertEquals(0x06, cpu->memory[6], "Memory at address 6 is not the expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_FX55_isInvoked_I_isIncrementedByHowManyRegistersHaveBeenStored_plusOne()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xF655);
+	
+	cpu->I = 0x20;
+
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+	
+	assertEquals(0x27, cpu->I, "I is not the expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_FX65_isInvoked_RegisterValues_0_throughTo_RegisterX_AreSetToValuesFromMemory_PointedAtByI()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xF665);
+	cpu->memory[10] = 0x00;
+	cpu->memory[11] = 0x01;
+	cpu->memory[12] = 0x02;
+	cpu->memory[13] = 0x03;
+	cpu->memory[14] = 0x04;
+	cpu->memory[15] = 0x05;
+	cpu->memory[16] = 0x06;
+
+	cpu->I = 10;
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+	
+	assertEquals(0x00, cpu->regs[0], "Register 0 is not the expected value", __FUNCTION__);
+	assertEquals(0x01, cpu->regs[1], "Register 1 is not the expected value", __FUNCTION__);
+	assertEquals(0x02, cpu->regs[2], "Register 2 is not the expected value", __FUNCTION__);
+	assertEquals(0x03, cpu->regs[3], "Register 3 is not the expected value", __FUNCTION__);
+	assertEquals(0x04, cpu->regs[4], "Register 4 is not the expected value", __FUNCTION__);
+	assertEquals(0x05, cpu->regs[5], "Register 5 is not the expected value", __FUNCTION__);
+	assertEquals(0x06, cpu->regs[6], "Register 6 is not the expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
+void test_FX65_isInvoked_I_isIncrementedByHowManyRegisterValuesHaveBeenLoaded_PlusOne()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0xF665);
+	
+	cpu->I = 10;
+	load_game(cpu, (void*)&op, 2);
+	parse_op(cpu);
+	
+	assertEquals(17, cpu->I, "I is not the expected value", __FUNCTION__);
+	destroy_cpu(cpu);
+}
+
 typedef void (*testFunc)();
 
 testFunc testFunctions[] = {
@@ -660,6 +739,10 @@ testFunc testFunctions[] = {
 	test_00E0_isInvoked_TheScreenIsCleared,
 	test_FX29_isInvoked_I_IsSetToTheAddressOfTheFontCharacter_WithTheValueOf_RegisterX,
 	test_FX33_isInvoked_TheValueAt_RegisterX_IsStoredAsBinaryCodedDecimal_AtTheMemoryAddressOfI,
+	test_FX55_isInvoked_Register0_throughTo_RegisterX_isStoredAtMemoryAddress_PointedAtBy_I,
+	test_FX55_isInvoked_I_isIncrementedByHowManyRegistersHaveBeenStored_plusOne,
+	test_FX65_isInvoked_RegisterValues_0_throughTo_RegisterX_AreSetToValuesFromMemory_PointedAtByI,
+	test_FX65_isInvoked_I_isIncrementedByHowManyRegisterValuesHaveBeenLoaded_PlusOne,
 	0
 };
 
