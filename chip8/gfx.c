@@ -23,7 +23,6 @@ void gfx_init()
 
 void gfx_cls()
 {
-	printf("CLEARING SCREEN\n");
 	SDL_FillRect(screen, NULL, 0);
 	memset(screenBuffer, 0, 64*32);
 }

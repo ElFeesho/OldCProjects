@@ -6,9 +6,161 @@
 #include "input.h"
 #include "sound.h"
 
-static const int 		PROGRAM_START_OFFSET = 0x200;
-
 typedef void (*op_handler)(chip8_cpu_t *, short);
+
+static const int PROGRAM_START_OFFSET = 0x200;
+static const int CARRY_FLAG = 15;
+
+static inline unsigned char nybbleOne(unsigned short value)
+{
+	return (value & 0xf000)>>12;
+} 
+
+static inline unsigned char nybbleTwo(unsigned short value)
+{
+	return (value & 0x0f00)>>8;
+} 
+
+static inline unsigned char nybbleThree(unsigned short value)
+{
+	return (value & 0x00f0)>>4;
+} 
+
+static inline unsigned char nybbleFour(unsigned short value)
+{
+	return (value & 0x000f);
+} 
+
+static inline unsigned char byteOne(unsigned short value)
+{
+	return (value & 0xff00) >> 8;
+}
+
+static inline unsigned char byteTwo(unsigned short value)
+{
+	return value & 0x00ff;
+}
+
+void op_00XX(chip8_cpu_t *cpu, short opperand);
+void op_1XXX(chip8_cpu_t *cpu, short opperand);
+void op_2XXX(chip8_cpu_t *cpu, short opperand);
+void op_3XXX(chip8_cpu_t *cpu, short opperand);
+void op_4XXX(chip8_cpu_t *cpu, short opperand);
+void op_5XXX(chip8_cpu_t *cpu, short opperand);
+void op_6XXX(chip8_cpu_t *cpu, short opperand);
+void op_7XXX(chip8_cpu_t *cpu, short opperand);
+void op_8XXX(chip8_cpu_t *cpu, short opperand);
+void op_8XX0(chip8_cpu_t *cpu, short opperand);
+void op_8XX1(chip8_cpu_t *cpu, short opperand);
+void op_8XX2(chip8_cpu_t *cpu, short opperand);
+void op_8XX3(chip8_cpu_t *cpu, short opperand);
+void op_8XX4(chip8_cpu_t *cpu, short opperand);
+void op_8XX5(chip8_cpu_t *cpu, short opperand);
+void op_8XX6(chip8_cpu_t *cpu, short opperand);
+void op_8XX7(chip8_cpu_t *cpu, short opperand);
+void op_8XXE(chip8_cpu_t *cpu, short opperand);
+
+void op_9XXX(chip8_cpu_t *cpu, short opperand);
+void op_AXXX(chip8_cpu_t *cpu, short opperand);
+void op_BXXX(chip8_cpu_t *cpu, short opperand);
+void op_CXXX(chip8_cpu_t *cpu, short opperand);
+void op_DXXX(chip8_cpu_t *cpu, short opperand);
+void op_EXXX(chip8_cpu_t *cpu, short opperand);
+void op_FXXX(chip8_cpu_t *cpu, short opperand);
+void unhandledOpcode(chip8_cpu_t *cpu, short opperand);
+
+static op_handler baseOpHandlerTable[] = {
+	&op_00XX,
+	&op_1XXX,
+	&op_2XXX,
+	&op_3XXX,
+	&op_4XXX,
+	&op_5XXX,
+	&op_6XXX,
+	&op_7XXX,
+	&op_8XXX,
+	&op_9XXX,
+	&op_AXXX,
+	&op_BXXX,
+	&op_CXXX,
+	&op_DXXX,
+	&op_EXXX,
+	&op_FXXX
+};
+
+static op_handler arithmeticTable[] = {
+	&op_8XX0,
+	&op_8XX1,
+	&op_8XX2,
+	&op_8XX3,
+	&op_8XX4,
+	&op_8XX5,
+	&op_8XX6,
+	&op_8XX7,
+	&unhandledOpcode,
+	&unhandledOpcode,
+	&unhandledOpcode,
+	&unhandledOpcode,
+	&unhandledOpcode,
+	&unhandledOpcode,
+	&op_8XXE,
+	&unhandledOpcode
+};
+
+void op_8XX0(chip8_cpu_t *cpu, short opperand)
+{
+	cpu->regs[nybbleTwo(opperand)] = cpu->regs[nybbleThree(opperand)];
+}
+
+void op_8XX1(chip8_cpu_t *cpu, short opperand)
+{
+	cpu->regs[nybbleTwo(opperand)] |= cpu->regs[nybbleThree(opperand)];
+}
+
+void op_8XX2(chip8_cpu_t *cpu, short opperand)
+{
+	cpu->regs[nybbleTwo(opperand)] &= cpu->regs[nybbleThree(opperand)];
+}
+
+void op_8XX3(chip8_cpu_t *cpu, short opperand)
+{
+	cpu->regs[nybbleTwo(opperand)] ^= cpu->regs[nybbleThree(opperand)];
+}
+
+void op_8XX4(chip8_cpu_t *cpu, short opperand)
+{
+	cpu->regs[CARRY_FLAG] = (cpu->regs[nybbleTwo(opperand)] + cpu->regs[nybbleThree(opperand)] > 255);
+	cpu->regs[nybbleTwo(opperand)] += cpu->regs[nybbleThree(opperand)];
+}
+
+void op_8XX5(chip8_cpu_t *cpu, short opperand)
+{
+	cpu->regs[CARRY_FLAG] = !(cpu->regs[nybbleThree(opperand)] > cpu->regs[nybbleTwo(opperand)]);
+	cpu->regs[nybbleTwo(opperand)] -= cpu->regs[nybbleThree(opperand)];
+}
+
+void op_8XX6(chip8_cpu_t *cpu, short opperand)
+{
+	cpu->regs[CARRY_FLAG] = cpu->regs[nybbleThree(opperand)]&0x01;
+	cpu->regs[nybbleTwo(opperand)] = cpu->regs[nybbleThree(opperand)] >> 1;
+}
+
+void op_8XX7(chip8_cpu_t *cpu, short opperand)
+{
+	cpu->regs[CARRY_FLAG] = !(cpu->regs[nybbleTwo(opperand)] > cpu->regs[nybbleThree(opperand)]);
+	cpu->regs[nybbleTwo(opperand)] = cpu->regs[nybbleThree(opperand)] - cpu->regs[nybbleTwo(opperand)];
+}
+
+void op_8XXE(chip8_cpu_t *cpu, short opperand)
+{
+	cpu->regs[CARRY_FLAG] = (cpu->regs[nybbleThree(opperand)]&0x80) >> 7;
+	cpu->regs[nybbleTwo(opperand)] = cpu->regs[nybbleThree(opperand)] << 1;
+}
+
+void unhandledOpcode(chip8_cpu_t *cpu, short opperand) 
+{
+	fprintf(stderr, "UNHANDLEDOPCODE: %X\n", opperand);
+}
 
 void op_00XX(chip8_cpu_t *cpu, short opperand)
 {
@@ -29,22 +181,7 @@ void op_00XX(chip8_cpu_t *cpu, short opperand)
 */
 void op_1XXX(chip8_cpu_t *cpu, short opperand)
 {
-	cpu->PC = opperand&0x0fff;
-}
-
-/*
- Jump to address + v0
-*/
-void op_BXXX(chip8_cpu_t *cpu, short opperand)
-{
-	cpu->PC = cpu->regs[0] + (opperand&0x0fff);
-}
-
-void op_CXXX(chip8_cpu_t *cpu, short operand)
-{
-	int targetRegister = (operand&0xf00)>>8;
-	int mask = operand & 0xff;
-	cpu->regs[targetRegister] = (rand() % 256) & mask;
+	cpu->PC = opperand & 0x0fff;
 }
 
 void op_2XXX(chip8_cpu_t *cpu, short opperand)
@@ -63,7 +200,7 @@ void op_2XXX(chip8_cpu_t *cpu, short opperand)
 
 void op_3XXX(chip8_cpu_t *cpu, short opperand)
 {
-	if(cpu->regs[(opperand & 0x0f00) >> 8] == (opperand & 0x00ff))
+	if(cpu->regs[nybbleTwo(opperand)] == (opperand & 0x00ff))
 	{
 		cpu->PC += 2;
 	}
@@ -71,7 +208,7 @@ void op_3XXX(chip8_cpu_t *cpu, short opperand)
 
 void op_4XXX(chip8_cpu_t *cpu, short opperand)
 {
-	if(cpu->regs[(opperand&0x0f00)>>8] != (opperand & 0x00ff))
+	if(cpu->regs[nybbleTwo(opperand)] != (opperand & 0x00ff))
 	{
 		cpu->PC += 2;
 	}
@@ -79,7 +216,7 @@ void op_4XXX(chip8_cpu_t *cpu, short opperand)
 
 void op_5XXX(chip8_cpu_t *cpu, short opperand)
 {
-	if(cpu->regs[(opperand&0x0f00)>>8] == cpu->regs[(opperand&0x00f0)>>4])
+	if(cpu->regs[nybbleTwo(opperand)] == cpu->regs[nybbleThree(opperand)])
 	{
 		cpu->PC += 2;
 	}
@@ -87,92 +224,22 @@ void op_5XXX(chip8_cpu_t *cpu, short opperand)
 
 void op_6XXX(chip8_cpu_t *cpu, short opperand)
 {
-	cpu->regs[(opperand&0x0f00)>>8] = (opperand&0x00ff);
+	cpu->regs[nybbleTwo(opperand)] = byteTwo(opperand);
 }
 
 void op_7XXX(chip8_cpu_t *cpu, short opperand)
 {
-	cpu->regs[(opperand&0x0f00)>>8] += (opperand&0x00ff);
+	cpu->regs[nybbleTwo(opperand)] += byteTwo(opperand);
 }
 
 void op_8XXX(chip8_cpu_t *cpu, short opperand)
 {
-	int subOp = opperand & 0x0f;
-	int lhs = (opperand & 0x0f00)>>8;
-	int rhs = (opperand & 0x00f0)>>4;
-
-	if(subOp == 0)
-	{
-		cpu->regs[lhs] = cpu->regs[rhs];
-	}
-	else if(subOp == 1)
-	{
-		cpu->regs[lhs] |= cpu->regs[rhs];
-	}
-	else if(subOp == 2)
-	{
-		cpu->regs[lhs] &= cpu->regs[rhs];
-	}
-	else if(subOp == 3)
-	{
-		cpu->regs[lhs] ^= cpu->regs[rhs];
-	}
-	else if(subOp == 4)
-	{
-		if(cpu->regs[lhs] + cpu->regs[rhs] > 255)
-		{
-			cpu->regs[15] = 1;
-		}
-		else
-		{
-			cpu->regs[15] = 0;
-		}
-
-		cpu->regs[lhs] += cpu->regs[rhs];
-	}
-	else if(subOp == 5)
-	{
-		if(cpu->regs[rhs] > cpu->regs[lhs])
-		{
-			cpu->regs[15] = 0;
-		}
-		else
-		{
-			cpu->regs[15] = 1;
-		}
-
-		cpu->regs[lhs] -= cpu->regs[rhs];
-	}
-	else if(subOp == 6)
-	{
-		cpu->regs[15] = cpu->regs[rhs]&0x01;
-
-		cpu->regs[lhs] = cpu->regs[rhs] >> 1;
-	}
-	else if(subOp == 7)
-	{
-		if(cpu->regs[lhs] > cpu->regs[rhs])
-		{
-			cpu->regs[15] = 0;
-		}
-		else
-		{
-			cpu->regs[15] = 1;
-		}
-
-		cpu->regs[lhs] = cpu->regs[rhs] - cpu->regs[lhs];
-	}
-	else if(subOp == 0xE)
-	{
-		cpu->regs[15] = (cpu->regs[rhs]&0x80) >> 7;
-
-		cpu->regs[lhs] = cpu->regs[rhs] << 1;
-	}
+	arithmeticTable[nybbleFour(opperand)](cpu, opperand);
 }
 
 void op_9XXX(chip8_cpu_t *cpu, short opperand)
 {
-	if(cpu->regs[(opperand&0x0f00)>>8] != cpu->regs[(opperand&0x00f0)>>4])
+	if(cpu->regs[nybbleTwo(opperand)] != cpu->regs[nybbleThree(opperand)])
 	{
 		cpu->PC += 2;
 	}
@@ -183,68 +250,74 @@ void op_AXXX(chip8_cpu_t *cpu, short opperand)
 	cpu->I = opperand & 0x0fff;
 }
 
+void op_BXXX(chip8_cpu_t *cpu, short opperand)
+{
+	cpu->PC = cpu->regs[0] + (opperand&0x0fff);
+}
+
+void op_CXXX(chip8_cpu_t *cpu, short opperand)
+{
+	int targetRegister = nybbleTwo(opperand);
+	int mask = byteTwo(opperand);
+	cpu->regs[targetRegister] = (rand() % 256) & mask;
+}
+
 void op_DXXX(chip8_cpu_t *cpu, short opperand)
 {
-	int x = cpu->regs[(opperand & 0xf00) >> 8];
-	int y = cpu->regs[(opperand & 0x00f0) >> 4];
-	int count = opperand & 0x0f;
-	cpu->regs[15] = gfx_draw(x, y, cpu->memory+cpu->I, count)?1:0;
+	int x = cpu->regs[nybbleTwo(opperand)];
+	int y = cpu->regs[nybbleThree(opperand)];
+	int count = nybbleFour(opperand);
+	cpu->regs[CARRY_FLAG] = gfx_draw(x, y, cpu->memory+cpu->I, count)?1:0;
 }
 
 void op_EXXX(chip8_cpu_t *cpu, short opperand)
 {
-	int targetKey = cpu->regs[(opperand&0x0f00)>>8];
+	int targetKey = cpu->regs[nybbleTwo(opperand)];
 	int keydown = input_keydown(targetKey);
-	if((opperand&0xff)==0x9E)
+	if(byteTwo(opperand) == 0x9E && keydown)
 	{
-		if(keydown)
-		{
-			cpu->PC += 2;
-		}
+		cpu->PC += 2;
 	}
-	else if((opperand&0xff)==0xA1)
+	else if(byteTwo(opperand) == 0xA1 && !keydown)
 	{
-		if(!keydown)
-		{
-			cpu->PC += 2;
-		}
+		cpu->PC += 2;
 	}
 }
 
 void op_FXXX(chip8_cpu_t *cpu, short opperand)
 {
-	if((opperand&0xff)==0x07)
+	unsigned char subCommand = byteTwo(opperand);
+	if(subCommand == 0x07)
 	{
-		cpu->regs[(opperand&0x0f00)>>8] = cpu->DT;
+		cpu->regs[nybbleTwo(opperand)] = cpu->DT;
 	}
-	else if((opperand&0xff)==0x0A)
+	else if(subCommand == 0x0A)
 	{
-		int key = (opperand & 0x0f00) >> 8;
+		int key = nybbleTwo(opperand);
 		gfx_flip();
 		cpu->regs[key] = input_readkey();
 	}
-	else if((opperand&0xff)==0x15)
+	else if(subCommand == 0x15)
 	{
-		cpu->DT = cpu->regs[(opperand&0x0f00)>>8];
+		cpu->DT = cpu->regs[nybbleTwo(opperand)];
 	}
-	else if((opperand&0xff)==0x18)
+	else if(subCommand == 0x18)
 	{
-		cpu->ST = cpu->regs[(opperand&0x0f00)>>8];
+		cpu->ST = cpu->regs[nybbleTwo(opperand)];
 		sound_start();
 	}
-	else if((opperand&0xff)==0x1E)
+	else if(subCommand == 0x1E)
 	{
-		cpu->I += cpu->regs[(opperand&0x0f00)>>8];
+		cpu->I += cpu->regs[nybbleTwo(opperand)];
 	}
-	else if((opperand&0xff)==0x29)
+	else if(subCommand == 0x29)
 	{
-		// Sprite stuff
-		cpu->I = 5*(cpu->regs[(opperand&0x0f00)>>8]);
+		cpu->I = 5 * (cpu->regs[nybbleTwo(opperand)]);
 	}
-	else if((opperand&0xff)==0x33)
+	else if(subCommand == 0x33)
 	{
 		//BCD...
-		int lhs = (opperand & 0x0f00) >> 8;
+		int lhs = nybbleTwo(opperand);
 		int target = cpu->regs[lhs];
 		int hundreds = target / 100;
 		target -= hundreds * 100;
@@ -255,48 +328,22 @@ void op_FXXX(chip8_cpu_t *cpu, short opperand)
 		cpu->memory[cpu->I+1] = (char)tens;
 		cpu->memory[cpu->I+2] = (char)units;
 	}
-	else if((opperand&0xff)==0x55)
+	else if(subCommand == 0x55)
 	{
-		unsigned char *start = cpu->memory + cpu->I;
-		int i = 0;
-		for(;i<=(opperand&0x0f00)>>8;i++)
+		for(int i = 0; i <= nybbleTwo(opperand);i++)
 		{
-			*(start+i) = cpu->regs[i];
+			cpu->memory[cpu->I++] = cpu->regs[i];
 		}
-
-		cpu->I += ((opperand&0x0f00)>>8) + 1;
 	}
-	else if((opperand&0xff)==0x65)
+	else if(subCommand == 0x65)
 	{
-		unsigned char *start = cpu->memory+cpu->I;
-		int i = 0;
-		for(;i<=(opperand&0x0f00)>>8;i++)
+		for(int i = 0; i<= nybbleTwo(opperand); i++)
 		{
-			cpu->regs[i] = *(start+i);
+			cpu->regs[i] = cpu->memory[cpu->I++];
 		}
-
-		cpu->I += ((opperand&0x0f00)>>8) + 1;
 	}
 }
 
-op_handler opHandlerTable[] = {
-	&op_00XX,
-	&op_1XXX,
-	&op_2XXX,
-	&op_3XXX,
-	&op_4XXX,
-	&op_5XXX,
-	&op_6XXX,
-	&op_7XXX,
-	&op_8XXX,
-	&op_9XXX,
-	&op_AXXX,
-	&op_BXXX,
-	&op_CXXX,
-	&op_DXXX,
-	&op_EXXX,
-	&op_FXXX
-};
 
 static void init_memory(chip8_cpu_t *cpu)
 {
@@ -365,14 +412,6 @@ int load_game_from_file(chip8_cpu_t *cpu, char *fname)
 		bytes_read += fread(cpu->memory + bytes_read + PROGRAM_START_OFFSET, 1, 1024, game);
 	}
 
-	printf("Read: %u bytes\n", (unsigned int)bytes_read);
-
-	int i = 0;
-	for(i = 0; i < bytes_read; i++)
-	{
-		printf("%02x ", cpu->memory[PROGRAM_START_OFFSET + i]);
-	}
-	printf("\n");
 	fclose(game);
 	return 0;
 }
@@ -411,10 +450,8 @@ void decrement_timers(chip8_cpu_t *cpu)
 int parse_op(chip8_cpu_t *cpu)
 {
 	unsigned short op = get_op(cpu);
-
-	int operation = (op & 0xf000) >> 12;
-
-	opHandlerTable[operation](cpu, op&0x0fff);
+	int operation = nybbleOne(op);
+	baseOpHandlerTable[operation](cpu, op & 0x0fff);
 
 	return 1;
 }
