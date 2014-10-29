@@ -163,6 +163,16 @@ void test_aLoadedProgram_LoadsAtTheCorrectAddressInMemory()
 	destroy_cpu(cpu);
 }
 
+void test_whenDelayTimeIsZero_DecrementingTimersDoesNotAffectDelayTimer()
+{
+
+}
+
+void test_whenDelayTimeIsNonZero_DecrementingTimersResultsInDelayTimer()
+{
+
+}
+
 typedef void (*testFunc)();
 
 testFunc testFunctions[] = {
@@ -176,6 +186,8 @@ testFunc testFunctions[] = {
 	test_aCpuCanBeCreated_withMemoryAllocated,
 	test_aCpuCanBeCreated_withMemoryDefaultValue,
 	test_aLoadedProgram_LoadsAtTheCorrectAddressInMemory,
+	test_whenDelayTimeIsZero_DecrementingTimersDoesNotAffectDelayTimer,
+	test_whenDelayTimeIsNonZero_DecrementingTimersResultsInDelayTimer
 	0
 };
 
