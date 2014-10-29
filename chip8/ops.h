@@ -1,16 +1,22 @@
 #ifndef __OPS_H__
 #define __OPS_H__
 
-extern unsigned char memory[4096];
-extern unsigned short I;
-extern unsigned char regs[16];
+typedef struct chip8_cpu_t {
+	unsigned short PC;
+	unsigned char *memory;
+	unsigned short I;
+	unsigned char regs[16];
+	unsigned short stack[16];
+	unsigned char SP;
+	unsigned char DT;
+	unsigned char ST;
+} chip8_cpu_t;
 
-extern unsigned short stack[16];
-
-extern int parse_op();
-
-extern int load_game(char *fname);
-
-extern int draw_flag_set();
+chip8_cpu_t *create_cpu();
+int parse_op(chip8_cpu_t *cpu);
+int load_game_from_file(chip8_cpu_t *cpu, char *fname);
+int load_game(chip8_cpu_t *cpu, void *memory, int size);
+void decrement_timers(chip8_cpu_t *cpu);
+void destroy_cpu(chip8_cpu_t *cpu);
 
 #endif

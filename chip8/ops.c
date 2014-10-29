@@ -1,27 +1,16 @@
 #include <SDL/SDL.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include "ops.h"
 #include "gfx.h"
 #include "input.h"
 #include "sound.h"
 
 static const int 		PROGRAM_START_OFFSET = 0x200;
 
-static unsigned char 	memory[4096] = { 0 };
-static int 				I = 0;
-static unsigned char 	regs[16] = { 0 };
-static unsigned char 	keys[16] = { 0 };
-static unsigned short 	PC = 0x200;
-static unsigned short 	stack[16] = { 0 };
-static unsigned char 	SP = 0;
+typedef void (*op_handler)(chip8_cpu_t *, short);
 
-static unsigned char DT = 0;
-static unsigned char ST = 0;
-
-
-typedef void (*op_handler)(short);
-
-void op_00XX(short opperand)
+void op_00XX(chip8_cpu_t *cpu, short opperand)
 {
 	int op = opperand & 0xff;
 	if(op == 0xE0)
@@ -31,40 +20,46 @@ void op_00XX(short opperand)
 	}
 	else if(op == 0xEE)
 	{
-		PC = stack[--SP];
+		int sp = cpu->SP;
+		cpu->SP -= 1;
+		cpu->PC = cpu->stack[sp];
+		printf("POPPED STACK: %d\n", cpu->SP);
 	}
 }
 
 /*
  Jump to address
 */
-void op_1XXX(short opperand)
+void op_1XXX(chip8_cpu_t *cpu, short opperand)
 {
-	PC = opperand;
+	cpu->PC = opperand;
 }
 
 /*
  Jump to address + v0
 */
-void op_BXXX(short opperand)
+void op_BXXX(chip8_cpu_t *cpu, short opperand)
 {
-	PC = regs[0] + (opperand&0x0fff);
+	cpu->PC = cpu->regs[0] + (opperand&0x0fff);
 }
 
-void op_CXXX(short operand)
+void op_CXXX(chip8_cpu_t *cpu, short operand)
 {
 	int targetRegister = (operand&0xf00)>>8;
 	int mask = operand & 0xff;
-	regs[targetRegister] = (rand() % 256) & mask;
+	cpu->regs[targetRegister] = (rand() % 256) & mask;
 }
 
-void op_2XXX(short opperand)
+void op_2XXX(chip8_cpu_t *cpu, short opperand)
 {
-	if(SP<16)
+	printf("Attempting to jump: %d\n", cpu->SP);
+	if(cpu->SP<16)
 	{
-		stack[SP] = PC;
-		PC = opperand;
-		SP++;
+		cpu->stack[cpu->SP] = cpu->PC;
+		cpu->PC = opperand;
+		cpu->SP++;
+
+		printf("PUSHED STACK: %d\n", cpu->SP);
 	}
 	else
 	{
@@ -72,204 +67,224 @@ void op_2XXX(short opperand)
 	}
 }
 
-void op_3XXX(short opperand)
+void op_3XXX(chip8_cpu_t *cpu, short opperand)
 {
-	if(regs[(opperand & 0x0f00) >> 8] == (opperand & 0x000f))
+	if(cpu->regs[(opperand & 0x0f00) >> 8] == (opperand & 0x000f))
 	{
-		PC += 2;
+		cpu->PC += 2;
 	}
 }
 
-void op_4XXX(short opperand)
+void op_4XXX(chip8_cpu_t *cpu, short opperand)
 {
-	if(regs[(opperand&0x0f00)>>8] != (opperand & 0x00ff))
+	if(cpu->regs[(opperand&0x0f00)>>8] != (opperand & 0x00ff))
 	{
-		PC += 2;
+		cpu->PC += 2;
 	}
 }
 
-void op_5XXX(short opperand)
+void op_5XXX(chip8_cpu_t *cpu, short opperand)
 {
-	if(regs[(opperand&0x0f00)>>8] == regs[(opperand&0x00f0)>>4])
+	if(cpu->regs[(opperand&0x0f00)>>8] == cpu->regs[(opperand&0x00f0)>>4])
 	{
-		PC += 2;
+		cpu->PC += 2;
 	}
 }
 
-void op_6XXX(short opperand)
+void op_6XXX(chip8_cpu_t *cpu, short opperand)
 {
-	regs[(opperand&0x0f00)>>8] = (opperand&0x00ff);
+	cpu->regs[(opperand&0x0f00)>>8] = (opperand&0x00ff);
 }
 
-void op_7XXX(short opperand)
+void op_7XXX(chip8_cpu_t *cpu, short opperand)
 {
-	regs[(opperand&0x0f00)>>8] += (opperand&0x00ff);
+	cpu->regs[(opperand&0x0f00)>>8] += (opperand&0x00ff);
 }
 
-void op_8XXX(short opperand)
+void op_8XXX(chip8_cpu_t *cpu, short opperand)
 {
 	int subOp = opperand & 0x0f;
 	int lhs = (opperand & 0x0f00)>>8;
 	int rhs = (opperand & 0x00f0)>>4;
+
 	if(subOp == 0)
 	{
-		regs[lhs] = regs[rhs];
+		cpu->regs[lhs] = cpu->regs[rhs];
 	}
 	else if(subOp == 1)
 	{
-		regs[lhs] |= regs[rhs];
+		cpu->regs[lhs] |= cpu->regs[rhs];
 	}
 	else if(subOp == 2)
 	{
-		regs[lhs] &= regs[rhs];
+		cpu->regs[lhs] &= cpu->regs[rhs];
 	}
 	else if(subOp == 3)
 	{
-		regs[lhs] ^= regs[rhs];
+		cpu->regs[lhs] ^= cpu->regs[rhs];
 	}
 	else if(subOp == 4)
 	{
-		if(regs[lhs] + regs[rhs] > 255)
-			regs[15] = 1;
+		if(cpu->regs[lhs] + cpu->regs[rhs] > 255)
+		{
+			cpu->regs[15] = 1;
+		}
 		else
-			regs[15] = 0;
-		regs[lhs] += regs[rhs];
+		{
+			cpu->regs[15] = 0;
+		}
+
+		cpu->regs[lhs] += cpu->regs[rhs];
 	}
 	else if(subOp == 5)
 	{
-		if(regs[rhs] > regs[lhs])
-			regs[15] = 0;
+		if(cpu->regs[rhs] > cpu->regs[lhs])
+		{
+			cpu->regs[15] = 0;
+		}
 		else
-			regs[15] = 1;
-		regs[lhs] -= regs[rhs];
+		{
+			cpu->regs[15] = 1;
+		}
+
+		cpu->regs[lhs] -= cpu->regs[rhs];
 	}
 	else if(subOp == 6)
 	{
-		regs[15] = regs[lhs]&0x01;
+		cpu->regs[15] = cpu->regs[lhs]&0x01;
 
-		regs[lhs] = regs[rhs] >> 1;
+		cpu->regs[lhs] = cpu->regs[rhs] >> 1;
 	}
 	else if(subOp == 7)
 	{
-		if(regs[lhs] > regs[rhs])
-			regs[15] = 0;
+		if(cpu->regs[lhs] > cpu->regs[rhs])
+		{
+			cpu->regs[15] = 0;
+		}
 		else
-			regs[15] = 1;
-		regs[lhs] = regs[rhs] - regs[lhs];
+		{
+			cpu->regs[15] = 1;
+		}
+
+		cpu->regs[lhs] = cpu->regs[rhs] - cpu->regs[lhs];
 	}
 	else if(subOp == 0xE)
 	{
 
-		regs[15] = (regs[lhs]&0x80) >> 7;
+		cpu->regs[15] = (cpu->regs[lhs]&0x80) >> 7;
 
-		regs[lhs] = regs[rhs] << 1;
+		cpu->regs[lhs] = cpu->regs[rhs] << 1;
 	}
 }
 
-void op_9XXX(short opperand)
+void op_9XXX(chip8_cpu_t *cpu, short opperand)
 {
-	if(regs[(opperand&0x0f00)>>8] != regs[(opperand&0x00f0)>>4])
+	if(cpu->regs[(opperand&0x0f00)>>8] != cpu->regs[(opperand&0x00f0)>>4])
 	{
-		PC += 2;
+		cpu->PC += 2;
 	}
 }
 
-void op_AXXX(short opperand)
+void op_AXXX(chip8_cpu_t *cpu, short opperand)
 {
-	I = opperand & 0x0fff;
+	cpu->I = opperand & 0x0fff;
 }
 
-void op_DXXX(short opperand)
+void op_DXXX(chip8_cpu_t *cpu, short opperand)
 {
-	int x = regs[(opperand & 0xf00) >> 8];
-	int y = regs[(opperand & 0x00f0) >> 4];
+	int x = cpu->regs[(opperand & 0xf00) >> 8];
+	int y = cpu->regs[(opperand & 0x00f0) >> 4];
 	int count = opperand & 0x0f;
-	regs[15] = gfx_draw(x, y, memory+I, count)?1:0;
+	cpu->regs[15] = gfx_draw(x, y, cpu->memory+cpu->I, count)?1:0;
 }
 
-void op_EXXX(short opperand)
+void op_EXXX(chip8_cpu_t *cpu, short opperand)
 {
-	int targetKey = regs[(opperand&0x0f00)>>8];
+	int targetKey = cpu->regs[(opperand&0x0f00)>>8];
 	int keydown = input_keydown(targetKey);
 	if((opperand&0xff)==0x9E)
 	{
 		if(keydown)
 		{
-			PC += 2;
+			cpu->PC += 2;
 		}
 	}
 	else if((opperand&0xff)==0xA1)
 	{
 		if(!keydown)
 		{
-			PC += 2;
+			cpu->PC += 2;
 		}
 	}
 }
 
-void op_FXXX(short opperand)
+void op_FXXX(chip8_cpu_t *cpu, short opperand)
 {
 	if((opperand&0xff)==0x07)
 	{
-		regs[(opperand&0x0f00)>>8] = DT;
+		cpu->regs[(opperand&0x0f00)>>8] = cpu->DT;
 	}
 	else if((opperand&0xff)==0x0A)
 	{
 		int key = (opperand & 0x0f00) >> 8;
 		SDL_Flip(SDL_GetVideoSurface());
-		regs[key] = input_readkey();
+		cpu->regs[key] = input_readkey();
 	}
 	else if((opperand&0xff)==0x15)
 	{
-		DT = regs[(opperand&0x0f00)>>8];
+		cpu->DT = cpu->regs[(opperand&0x0f00)>>8];
 	}
 	else if((opperand&0xff)==0x18)
 	{
-		ST = regs[(opperand&0x0f00)>>8];
+		cpu->ST = cpu->regs[(opperand&0x0f00)>>8];
 		sound_start();
 	}
 	else if((opperand&0xff)==0x1E)
 	{
-		I += regs[(opperand&0x0f00)>>8];
+		cpu->I += cpu->regs[(opperand&0x0f00)>>8];
 	}
 	else if((opperand&0xff)==0x29)
 	{
 		// Sprite stuff
-		I = 5*(regs[(opperand&0x0f00)>>8]);
+		cpu->I = 5*(cpu->regs[(opperand&0x0f00)>>8]);
 	}
 	else if((opperand&0xff)==0x33)
 	{
 		//BCD...
 		int lhs = (opperand & 0x0f00) >> 8;
-		int target = regs[lhs];
+		int target = cpu->regs[lhs];
 		int hundreds = target / 100;
 		target -= hundreds * 100;
 		int tens = target / 10;
 		target -= tens * 10;
 		int units = target;
-		memory[I] = (char)hundreds;
-		memory[I+1] = (char)tens;
-		memory[I+2] = (char)units;
+		cpu->memory[cpu->I] = (char)hundreds;
+		cpu->memory[cpu->I+1] = (char)tens;
+		cpu->memory[cpu->I+2] = (char)units;
 
-		printf("BCD %d to %d %d %d\n", regs[lhs], hundreds, tens, units);
+		printf("BCD %d to %d %d %d\n", cpu->regs[lhs], hundreds, tens, units);
 	}
 	else if((opperand&0xff)==0x55)
 	{
-		unsigned char *start = memory+I;
+		unsigned char *start = cpu->memory + cpu->I;
 		int i = 0;
 		for(;i<=(opperand&0x0f00)>>8;i++)
-			*(start+i) = regs[i];
+		{
+			*(start+i) = cpu->regs[i];
+		}
 
-		I += ((opperand&0x0f00)>>8) + 1;
+		cpu->I += ((opperand&0x0f00)>>8) + 1;
 	}
 	else if((opperand&0xff)==0x65)
 	{
-		unsigned char *start = memory+I;
+		unsigned char *start = cpu->memory+cpu->I;
 		int i = 0;
 		for(;i<=(opperand&0x0f00)>>8;i++)
-			regs[i] = *(start+i);
+		{
+			cpu->regs[i] = *(start+i);
+		}
 
-		I += ((opperand&0x0f00)>>8) + 1;
+		cpu->I += ((opperand&0x0f00)>>8) + 1;
 	}
 }
 
@@ -292,12 +307,7 @@ op_handler opHandlerTable[] = {
 	&op_FXXX
 };
 
-static int ops_get_pc()
-{
-	return PC;
-}
-
-static void init_memory()
+static void init_memory(chip8_cpu_t *cpu)
 {
 	unsigned char font[] =
 	{
@@ -318,10 +328,38 @@ static void init_memory()
 		0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
 		0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 	};
-	memcpy(memory, font, 80);
+	memcpy(cpu->memory, font, 80);
 }
 
-int load_game(char *fname)
+chip8_cpu_t *create_cpu()
+{
+	chip8_cpu_t *cpu = malloc(sizeof(chip8_cpu_t));
+	memset(cpu, 0, sizeof(chip8_cpu_t));
+	cpu->memory = malloc(4096);
+	cpu->SP = 0;
+	cpu->DT = 0;
+	cpu->ST = 0;
+	cpu->I = 0;
+
+	for(int i = 0; i < 16; i++)
+	{
+		cpu->regs[i] = 0;
+		cpu->stack[i] = 0;
+	}
+
+	cpu->PC = PROGRAM_START_OFFSET;
+	init_memory(cpu);
+
+	return cpu;
+}
+
+void destroy_cpu(chip8_cpu_t *cpu)
+{
+	free(cpu->memory);
+	free(cpu);
+}
+
+int load_game_from_file(chip8_cpu_t *cpu, char *fname)
 {
 	FILE *game = fopen(fname, "rb");
 	if(!game)
@@ -333,7 +371,7 @@ int load_game(char *fname)
 
 	while(!feof(game))
 	{
-		bytes_read += fread(memory + bytes_read + PROGRAM_START_OFFSET, 1, 1024, game);
+		bytes_read += fread(cpu->memory + bytes_read + PROGRAM_START_OFFSET, 1, 1024, game);
 	}
 
 	printf("Read: %u bytes\n", (unsigned int)bytes_read);
@@ -341,40 +379,37 @@ int load_game(char *fname)
 	int i = 0;
 	for(i = 0; i < bytes_read; i++)
 	{
-		printf("%02x ", memory[PROGRAM_START_OFFSET + i]);
+		printf("%02x ", cpu->memory[PROGRAM_START_OFFSET + i]);
 	}
 	printf("\n");
 	fclose(game);
-
-	PC = 0x200;
-	init_memory();
 	return 0;
 }
 
-unsigned short get_op()
+int load_game(chip8_cpu_t *cpu, void *game, int size)
 {
-	unsigned char opL = *((unsigned char*)memory+(PC));
-	unsigned char opR = *((unsigned char*)memory+(PC+1));
-	PC += 2;
+	memcpy(cpu->memory+PROGRAM_START_OFFSET, game, size);
+	return 0;
+}
+
+unsigned short get_op(chip8_cpu_t *cpu)
+{
+	unsigned char opL = *((unsigned char*)cpu->memory+(cpu->PC));
+	unsigned char opR = *((unsigned char*)cpu->memory+(cpu->PC+1));
+	cpu->PC += 2;
 	return ((short)opL<<8) + opR;
 }
 
-void print_cpu_state()
+void decrement_timers(chip8_cpu_t *cpu)
 {
-	printf("PC: %04X SP: %02d I: %X REGS: %X %X %X %X %X %X %X %X %X %X %X %X %X %X %X %X\n", PC, SP, I, regs[0], regs[1], regs[2], regs[3], regs[4], regs[5], regs[6], regs[7], regs[8], regs[9], regs[10], regs[11], regs[12], regs[13], regs[14], regs[15]);
-	fflush(stdout);
-}
-
-void decrement_timers()
-{
-	if(DT>0)
+	if(cpu->DT > 0)
 	{
-		DT--;
+		cpu->DT--;
 	}
 
-	if(ST>0)
+	if(cpu->ST > 0)
 	{
-		ST--;
+		cpu->ST--;
 	}
 	else
 	{
@@ -382,22 +417,13 @@ void decrement_timers()
 	}
 }
 
-int parse_op()
+int parse_op(chip8_cpu_t *cpu)
 {
-	unsigned short op = get_op();
+	unsigned short op = get_op(cpu);
 
 	int operation = (op & 0xf000) >> 12;
 
-	opHandlerTable[operation](op&0x0fff);
-
-	
+	opHandlerTable[operation](cpu, op&0x0fff);
 
 	return 1;
 }
-
- int draw_flag_set()
- {
- 	int flagset = regs[15];
- 	regs[15] = 0;
- 	return flagset;
- }
