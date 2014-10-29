@@ -273,7 +273,7 @@ void op_DXXX(chip8_cpu_t *cpu, short opperand)
 	int y = cpu->regs[nybbleThree(opperand)];
 	int count = nybbleFour(opperand);
 
-	cpu->regs[CARRY_FLAG] = gfx_draw(x, y, cpu->memory+cpu->I, count)?1:0;
+	cpu->regs[CARRY_FLAG] = gfx_draw(x-1, y, cpu->memory+cpu->I, count)?1:0;
 }
 
 void op_EXXX(chip8_cpu_t *cpu, short opperand)
@@ -382,6 +382,7 @@ chip8_cpu_t *create_cpu()
 	memset(cpu, 0, sizeof(chip8_cpu_t));
 	cpu->memory = malloc(4096);
 	memset(cpu->memory, 0, 4096);
+
 	cpu->SP = 0;
 	cpu->DT = 0;
 	cpu->ST = 0;
@@ -433,7 +434,7 @@ int load_game(chip8_cpu_t *cpu, void *game, int size)
 unsigned short get_op(chip8_cpu_t *cpu)
 {
 	unsigned char opL = *((unsigned char*)cpu->memory+(cpu->PC));
-	unsigned char opR = *((unsigned char*)cpu->memory+(cpu->PC+1));
+	unsigned char opR = *((unsigned char*)cpu->memory+(cpu->PC + 1));
 	increment_pc(cpu);
 	return ((short)opL<<8) + opR;
 }

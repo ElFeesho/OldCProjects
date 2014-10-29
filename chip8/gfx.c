@@ -1,15 +1,11 @@
 #include <SDL/SDL.h>
+#include "gfx.h"
 
 static SDL_Surface *screen = NULL;
 
 unsigned char *screenBuffer;
 
-void gfx_init();
-void gfx_cls();
 int gfx_draw_pixel_on();
-int gfx_draw_pixel_off();
-int gfx_draw(int x, int y, unsigned char *mem, int count);
-void gfx_flip();
 
 void gfx_init()
 {
