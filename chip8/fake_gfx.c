@@ -43,6 +43,11 @@ void gfx_init()
 
 }
 
+void gfx_flip()
+{
+	
+}
+
 int gfx_draw(int x, int y, unsigned char *mem, int count)
 {
 	gfx_draw_last_x = x;

@@ -220,10 +220,7 @@ void op_FXXX(chip8_cpu_t *cpu, short opperand)
 	else if((opperand&0xff)==0x0A)
 	{
 		int key = (opperand & 0x0f00) >> 8;
-		if (SDL_GetVideoSurface() != NULL)
-		{
-			SDL_Flip(SDL_GetVideoSurface());
-		}
+		gfx_flip();
 		cpu->regs[key] = input_readkey();
 	}
 	else if((opperand&0xff)==0x15)

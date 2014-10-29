@@ -59,7 +59,7 @@ int main(int argc, char ** argv)
 			parse_op(cpu);
 		}
 
-		SDL_Flip(SDL_GetVideoSurface());
+		gfx_flip();
 		SDL_Delay(1000/60);
 		decrement_timers(cpu);
 	}
