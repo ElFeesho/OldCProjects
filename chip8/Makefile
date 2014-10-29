@@ -19,4 +19,4 @@ flip:
 	gcc -DFLIP main.c gfx.c ops.c -o chip8 $(LIBS) $(CFLAGS)
 
 clean:
-	rm -f $(OBJS) $(PROG)
+	rm -f $(OBJS) $(PROG) $(TOBJS) $(TPROG)
