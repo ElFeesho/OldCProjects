@@ -308,6 +308,20 @@ void test_whenOp_3XNN_isInvoked_GivenRegisterX_EqualsNN_ThePCIsIncrementedToSkip
 	destroy_cpu(cpu);	
 }
 
+void test_whenOp_3XNN_isInvoked_GivenRegisterX_DoesNotEqual_NN_TheNextInstructionIsNotSkipped()
+{
+	chip8_cpu_t *cpu = create_cpu();
+	short op = TO_OP(0x30ff);
+	cpu->regs[0] = 0x88;
+
+	load_game(cpu, (void*)&op, 2);
+
+	parse_op(cpu);
+
+	assertEquals(0x202, cpu->PC, "PC does not match expected value", __FUNCTION__);
+	destroy_cpu(cpu);	
+}
+
 typedef void (*testFunc)();
 
 testFunc testFunctions[] = {
@@ -331,6 +345,7 @@ testFunc testFunctions[] = {
 	test_whenOp_00EE_isInvoked_TheStackPointerIsDecremented,
 	test_whenOp_00EE_isInvoked_ThePCRegisterContainsTheAddressOfTheNextInstruction_FromTheStack,
 	test_whenOp_3XNN_isInvoked_GivenRegisterX_EqualsNN_ThePCIsIncrementedToSkipTheNextInstruction,
+	test_whenOp_3XNN_isInvoked_GivenRegisterX_DoesNotEqual_NN_TheNextInstructionIsNotSkipped,
 	0
 };
 
