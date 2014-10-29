@@ -41,6 +41,11 @@ static inline unsigned char byteTwo(unsigned short value)
 	return value & 0x00ff;
 }
 
+static inline void increment_pc(chip8_cpu_t *cpu)
+{
+	cpu->PC += 2;
+}
+
 void op_00XX(chip8_cpu_t *cpu, short opperand);
 void op_1XXX(chip8_cpu_t *cpu, short opperand);
 void op_2XXX(chip8_cpu_t *cpu, short opperand);
@@ -200,17 +205,17 @@ void op_2XXX(chip8_cpu_t *cpu, short opperand)
 
 void op_3XXX(chip8_cpu_t *cpu, short opperand)
 {
-	if(cpu->regs[nybbleTwo(opperand)] == (opperand & 0x00ff))
+	if(cpu->regs[nybbleTwo(opperand)] == byteTwo(opperand))
 	{
-		cpu->PC += 2;
+		increment_pc(cpu);
 	}
 }
 
 void op_4XXX(chip8_cpu_t *cpu, short opperand)
 {
-	if(cpu->regs[nybbleTwo(opperand)] != (opperand & 0x00ff))
+	if(cpu->regs[nybbleTwo(opperand)] != byteTwo(opperand))
 	{
-		cpu->PC += 2;
+		increment_pc(cpu);
 	}
 }
 
@@ -218,7 +223,7 @@ void op_5XXX(chip8_cpu_t *cpu, short opperand)
 {
 	if(cpu->regs[nybbleTwo(opperand)] == cpu->regs[nybbleThree(opperand)])
 	{
-		cpu->PC += 2;
+		increment_pc(cpu);
 	}
 }
 
@@ -241,7 +246,7 @@ void op_9XXX(chip8_cpu_t *cpu, short opperand)
 {
 	if(cpu->regs[nybbleTwo(opperand)] != cpu->regs[nybbleThree(opperand)])
 	{
-		cpu->PC += 2;
+		increment_pc(cpu);
 	}
 }
 
@@ -252,7 +257,7 @@ void op_AXXX(chip8_cpu_t *cpu, short opperand)
 
 void op_BXXX(chip8_cpu_t *cpu, short opperand)
 {
-	cpu->PC = cpu->regs[0] + (opperand&0x0fff);
+	cpu->PC = cpu->regs[0] + (opperand & 0x0fff);
 }
 
 void op_CXXX(chip8_cpu_t *cpu, short opperand)
@@ -267,6 +272,7 @@ void op_DXXX(chip8_cpu_t *cpu, short opperand)
 	int x = cpu->regs[nybbleTwo(opperand)];
 	int y = cpu->regs[nybbleThree(opperand)];
 	int count = nybbleFour(opperand);
+
 	cpu->regs[CARRY_FLAG] = gfx_draw(x, y, cpu->memory+cpu->I, count)?1:0;
 }
 
@@ -274,13 +280,14 @@ void op_EXXX(chip8_cpu_t *cpu, short opperand)
 {
 	int targetKey = cpu->regs[nybbleTwo(opperand)];
 	int keydown = input_keydown(targetKey);
+
 	if(byteTwo(opperand) == 0x9E && keydown)
 	{
-		cpu->PC += 2;
+		increment_pc(cpu);
 	}
 	else if(byteTwo(opperand) == 0xA1 && !keydown)
 	{
-		cpu->PC += 2;
+		increment_pc(cpu);
 	}
 }
 
@@ -293,9 +300,8 @@ void op_FXXX(chip8_cpu_t *cpu, short opperand)
 	}
 	else if(subCommand == 0x0A)
 	{
-		int key = nybbleTwo(opperand);
 		gfx_flip();
-		cpu->regs[key] = input_readkey();
+		cpu->regs[nybbleTwo(opperand)] = input_readkey();
 	}
 	else if(subCommand == 0x15)
 	{
@@ -366,6 +372,7 @@ static void init_memory(chip8_cpu_t *cpu)
 		0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
 		0xF0, 0x80, 0xF0, 0x80, 0x80  // F
 	};
+
 	memcpy(cpu->memory, font, 80);
 }
 
@@ -374,6 +381,7 @@ chip8_cpu_t *create_cpu()
 	chip8_cpu_t *cpu = malloc(sizeof(chip8_cpu_t));
 	memset(cpu, 0, sizeof(chip8_cpu_t));
 	cpu->memory = malloc(4096);
+	memset(cpu->memory, 0, 4096);
 	cpu->SP = 0;
 	cpu->DT = 0;
 	cpu->ST = 0;
@@ -426,7 +434,7 @@ unsigned short get_op(chip8_cpu_t *cpu)
 {
 	unsigned char opL = *((unsigned char*)cpu->memory+(cpu->PC));
 	unsigned char opR = *((unsigned char*)cpu->memory+(cpu->PC+1));
-	cpu->PC += 2;
+	increment_pc(cpu);
 	return ((short)opL<<8) + opR;
 }
 
