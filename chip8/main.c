@@ -4,10 +4,6 @@
 #include "sound.h"
 #include "ops.h"
 
-extern int load_game(char *filename);
-extern int parse_op();
-extern void decrement_timers();
-
 static int NUM_OPS = 7;
 
 int main(int argc, char ** argv)
@@ -23,7 +19,9 @@ int main(int argc, char ** argv)
 		sscanf(argv[2], "%d", &NUM_OPS);
 	}
 
-	if(load_game(argv[1]))
+	chip8_cpu_t *cpu = create_cpu();
+
+	if(load_game_from_file(cpu, argv[1]))
 	{
 		fprintf(stderr, "Couldn't load %s\n",argv[1]);
 		return 1;
@@ -58,12 +56,15 @@ int main(int argc, char ** argv)
 
 		for(int i = 0; i < NUM_OPS; i++)
 		{
-			parse_op();
+			parse_op(cpu);
 		}
+
 		SDL_Flip(SDL_GetVideoSurface());
 		SDL_Delay(1000/60);
-		decrement_timers();
+		decrement_timers(cpu);
 	}
+
+	destroy_cpu(cpu);
 
 	return 0;
 }

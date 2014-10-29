@@ -28,7 +28,7 @@ int input_readkey()
 	{
 		SDL_WaitEvent(&ev);
 		if(ev.type == SDL_KEYDOWN)
-		{	
+		{
 			int sym = ev.key.keysym.sym;
 			for(int i = 0; i < 16; i++)
 			{
@@ -44,6 +44,8 @@ int input_readkey()
 			exit(-1);
 		}
 	}
+
+	return result;
 }
 
 int input_keydown(int key)
